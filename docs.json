@@ -3,11 +3,11 @@
   "theme": "mint",
   "name": "Brale API Docs",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#000000",
+    "light": "#6938EF",
+    "dark": "#18181B"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/images/brale/favicon.svg",
   "navigation": {
     "tabs": [
       {

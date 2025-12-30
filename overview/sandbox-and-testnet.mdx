@@ -1,10 +1,9 @@
----
-title: 'Sandbox & Testnet'
+title: 'Testnet'
 ---
 
-<p class="intro-subheading">Brale provides a sandbox environment to simulate requests.</p>
+<p class="intro-subheading">Brale provides a testnet environment for non-production requests. There is no separate sandbox.</p>
 
-Only testnets (Sepolia, Solana Devnet, Base Sepolia, etc.) are supported in sandbox. Fiat flows and blockchain mainnets (Ethereum, Solana, etc) are not supported in sandbox.
+Only testnets (Sepolia, Solana Devnet, Base Sepolia, etc.) are supported. Fiat flows and blockchain mainnets (Ethereum, Solana, etc.) are not supported in testnet.
 
 See the full set of [supported blockchain networks](/coverage/stablecoins-and-blockchains).
 
@@ -20,7 +19,7 @@ Select `Testnet` as Network and enable all resources.
 
 ## 2. Mint Tokens on Testnets
 
-When you submit a mint in sandbox, we skip the fiat leg and immediately mint on-chain. This simulates a onramp transaction, and also acts as a faucet to easily mint tokens to use in other flows (payouts, etc.).
+When you submit a mint on testnet, we skip the fiat leg and immediately mint on-chain. This simulates an onramp transaction and acts as a faucet to mint tokens for other flows (payouts, etc.).
 
 **POST** `https://api.brale.xyz/accounts/account_id/transfers`
 
@@ -44,7 +43,7 @@ When you submit a mint in sandbox, we skip the fiat leg and immediately mint on-
 
 ## 3. Burn Tokens on Testnets
 
-When you submit a redemption in sandbox, we immediately burn on-chain and skip the fiat payout. This simulates an offramp transaction.
+When you submit a redemption on testnet, we immediately burn on-chain and skip the fiat payout. This simulates an offramp transaction.
 
 **POST** `https://api.brale.xyz/accounts/account_id/transfers`
 
