@@ -2,4 +2,61 @@
 title: "Structure"
 ---
 
-i'm a structure.
+# Brale API structure
+
+How core resources relate to each other when you build on Brale.
+
+## At a glance
+
+- **Client-owned Account** holds your API credentials and owns downstream resources.
+- **Managed Accounts** are customer accounts you register under your client account.
+- **Addresses** are the canonical source/destination primitive (internal custodial or external).
+- **Automations** create virtual receiving accounts that map to underlying addresses.
+- **Financial Institutions** are legacy offchain funding records; prefer Addresses. (Shown for backward compatibility.)
+
+## Relationship diagram
+
+```mermaid
+graph TD
+  %% Top-Level: Client-Owned Account
+  A1["Client Owned Account<br/>(Holds API credentials)"]
+  A1 --> AO["Account_ID (owned)<br/>type=internal"]
+  AO --> AO_FS["Funding Source<br/>FinancialInstitution_ID (legacy)"]
+  AO --> AO_AUTO["Automations_ID"]
+
+  %% Managed Custodial Accounts
+  A1 --> MA["Managed Account<br/>Account_ID (internal)"]
+  MA --> MA_FS["Funding Source<br/>FinancialInstitution_ID (legacy)"]
+  MA --> MA_AUTO["Automations_ID"]
+
+  %% External Address Records
+  A1 --> ADDR["Address_ID<br/>type=external"]
+  ADDR --> TT["transfer_type"]
+  ADDR --> VT["value_type"]
+
+  %% Internal Addresses (custodial)
+  AO --- N1["Address_ID<br/>type=internal"]
+  MA --- N2["Address_ID<br/>type=internal"]
+
+  %% Virtual accounts created by automations
+  AO_AUTO --> VA1["Virtual Account"]
+  MA_AUTO --> VA2["Virtual Account"]
+  VA1 --- VA1_VT["value_type"]
+  VA1 --- VA1_TT["transfer_type"]
+  VA2 --- VA2_VT["value_type"]
+  VA2 --- VA2_TT["transfer_type"]
+```
+
+## Key points
+
+- All IDs (`account_id`, `address_id`, `automation_id`, etc.) are KSUIDs (26 chars, time-sortable).
+- Use `address_id` for all transfer endpoints (onchain and offchain). Financial Institutions are deprecated and retained only for legacy flows.
+- Automations produce virtual accounts that resolve to addresses; they surface the `transfer_type` and `value_type` you configure.
+
+## Related links
+
+- [Accounts](/key-concepts/accounts)
+- [Addresses](/key-concepts/addresses)
+- [Automations](/key-concepts/automations)
+- [Transfers](/key-concepts/transfers)
+- [OpenAPI](https://api.brale.xyz/openapi)
