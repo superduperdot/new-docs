@@ -1,0 +1,41 @@
+---
+title: "Stablecoin Orchestration"
+description: "Move value across fiat rails and blockchains with controls for branding, automation, and reconciliation."
+---
+
+## Overview
+
+Stablecoin orchestration coordinates how funds enter, move, and exit your ecosystem across fiat rails (ACH, wire, RTP) and blockchains. Brale gives you a single API for mint, redeem, swap, and payout flows with custody, automations, and branding controls built in.
+
+## Core capabilities
+
+- **Unified transfers**: Use `address_id` as the universal source/destination across onchain and offchain rails.
+- **Multi-rail support**: ACH (same-day/standard), wire, RTP, plus supported chains (EVM, Solana, Stellar, etc.).
+- **Automations**: Virtual accounts that route deposits, create addresses, and map to the right `transfer_type`/`value_type`.
+- **Branding**: Optional statement branding on ACH payouts.
+- **Program controls**: Idempotent POSTs, KSUID IDs, scoped credentials (mainnet vs testnet), and webhook-driven reconciliation.
+
+## Typical flows
+
+- **Onramp**: fiat → stablecoin (mint) to a custodial address, then distribute on-chain.  
+- **Offramp**: stablecoin → fiat (redeem) to a beneficiary bank account via ACH/wire/RTP.  
+- **Payouts**: ACH with branding, RTP for instant, or on-chain payouts to external wallets.  
+- **Cross-chain**: move value between supported chains using source/destination addresses with appropriate `transfer_type`.  
+- **Program treasury**: park liquidity in custodial addresses; sweep/redeme as needed.
+
+## Implementation checkpoints
+
+- **Identify rails**: choose `transfer_type` + `value_type` pairs from [Transfer Types](/docs/coverage/transfer-types) and [Value Types](/coverage/value-types).
+- **Use internal custody**: fetch custodial addresses (`type=internal`) per chain for mint/payout flows; register external addresses for counterparties.
+- **Always send Idempotency-Key** on create POSTs; reuse the same key on retries.
+- **Brand ACH payouts** when needed; omit branding for wire/RTP.
+- **Monitor & reconcile**: list transfers with pagination; store `id`, `Idempotency-Key`, status, timestamps, and provider refs. Refresh tokens on 401 and retry idempotently.
+
+## Related docs
+
+- [Transfers](/key-concepts/transfers)  
+- [Addresses](/key-concepts/addresses)  
+- [Automations](/key-concepts/automations)  
+- [Value Types](/coverage/value-types)  
+- [Transfer Types](/docs/coverage/transfer-types)  
+- [Troubleshooting](/documentation/troubleshooting)

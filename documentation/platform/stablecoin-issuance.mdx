@@ -2,3 +2,44 @@
 title: 'Stablecoin Issuance'
 ---
 
+## Overview
+
+Brale issues fiat-backed stablecoins for businesses that want programmable dollars without running their own banking or blockchain stack. You set the program rules; Brale handles mint/burn, custody, settlement, reserves, and reporting.
+
+## Who it’s for
+
+- Fintechs, marketplaces, wallets, and payment platforms that want branded or white-label dollars
+- Issuers that need multi-chain support, 1:1 reserves, and compliance controls
+- Teams that want APIs first, with dashboards for operations and reconciliation
+
+## How it works
+
+1. **Onboard & scope**: Complete KYB and choose issuance scope (mainnet/testnet), supported rails, and branding.  
+2. **Create managed accounts**: Represent your customers or programs; Brale provides custodial addresses on supported chains.  
+3. **Fund & mint**: Move fiat in (ACH/wire/RTP) to mint branded stablecoins (e.g., `SBC`, `USDGLO`) to custodial addresses.  
+4. **Circulate**: Transfer on-chain or off-chain; configure automations for deposits and payouts.  
+5. **Redeem & burn**: Burn to settle redemptions back to fiat rails.  
+6. **Monitor**: Use balances, transfers, and webhooks for reconciliation; view reserves and status in-dashboard.
+
+## Guarantees & controls
+
+- **1:1 reserves** for issued supply; transparent reserve visibility.  
+- **KSUID identifiers** (`account_id`, `address_id`, `automation_id`) for traceability.  
+- **Idempotency everywhere** on POSTs to prevent duplicate mint/burn flows.  
+- **Per-chain custody**: internal custodial addresses per chain; external addresses registered per chain/rail.  
+- **Branding**: optional statement branding for ACH payouts.  
+
+## Key building blocks
+
+- **Transfers**: mint (fiat → stablecoin), redeem (stablecoin → fiat), and move value across rails.  
+- **Addresses**: custodial (internal) for issued tokens; external for counterparties.  
+- **Automations**: virtual accounts that route deposits to the right token/chain.  
+- **Value types**: canonical token identifiers (see [Value Types](/coverage/value-types)); case-sensitive.
+
+## Related docs
+
+- [Stablecoin Issuance guide](/guides/stablecoin-issuance)  
+- [Transfers](/key-concepts/transfers)  
+- [Addresses](/key-concepts/addresses)  
+- [Value Types](/coverage/value-types)  
+- [Transfer Types](/docs/coverage/transfer-types)  
