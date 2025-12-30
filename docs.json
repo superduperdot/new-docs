@@ -30,8 +30,15 @@
       {
         "tab": "Documentation",
         "pages": [
-          "documentation/introduction",
-          "documentation/commons-stablecoin-format"
+          "documentation/introduction"
+        ]
+      },
+      {
+        "tab": "Tools",
+        "pages": [
+          "documentation/commons-stablecoin-format",
+          "documentation/commons-repo",
+          "documentation/calculators"
         ]
       },
       {
@@ -159,3 +166,4 @@
   },
   "openapi": "/api-reference/brale-openapi.yaml"
 }
+
