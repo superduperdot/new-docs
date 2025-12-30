@@ -14,7 +14,7 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Docs",
+        "tab": "Documentation",
         "groups": [
           {
             "group": "Overview",
@@ -38,20 +38,6 @@
             ]
           },
           {
-            "group": "Guides",
-            "pages": [
-              "guides/fiat-to-stablecoin-onramp",
-              "guides/stablecoin-to-fiat-offramp",
-              "guides/stablecoin-to-stablecoin-swap",
-              "guides/stablecoin-issuance",
-              "guides/stablecoin-payouts",
-              "guides/2nd-and-3rd-party-transfers",
-              "guides/tokenization",
-              "guides/custody",
-              "guides/canton-token-standard"
-            ]
-          },
-          {
             "group": "Coverage",
             "pages": [
               "coverage/payment-methods",
@@ -63,6 +49,25 @@
             "pages": [
               "io/introduction",
               "io/url-navigation"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Workflows",
+            "pages": [
+              "guides/fiat-to-stablecoin-onramp",
+              "guides/stablecoin-to-fiat-offramp",
+              "guides/stablecoin-to-stablecoin-swap",
+              "guides/stablecoin-issuance",
+              "guides/stablecoin-payouts",
+              "guides/2nd-and-3rd-party-transfers",
+              "guides/custody",
+              "guides/canton-token-standard",
+              "guides/tokenization"
             ]
           }
         ]
