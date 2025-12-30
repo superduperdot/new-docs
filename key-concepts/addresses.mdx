@@ -1,0 +1,469 @@
+---
+title: 'Addresses'
+---
+
+<p class="intro-subheading">
+  Addresses are represented by an `address_id`, which uniquely identifies a wallet or account for a
+  specific `transfer_type`.
+</p>
+
+An `address_id` can represent either an onchain wallet or offchain account (ACH, Wire, or RTP account), depending on the `transfer_type`. Use `address_id` wherever a source/destination is required in Transfers.
+
+Brale distinguishes between internal and external addresses using the type field:
+
+- `type`: `internal` - An `address_id` associated with wallets managed by Brale on behalf of you or your customers.
+- `type`: `external` - An `address_id` managed outside of Brale's infrastructure (e.g., user-owned wallet or external account).
+
+Whether internal or external, all addresses possess:
+
+- `name`: A human redable label
+- `transfer_types`: The `transfer_types` the address supports.
+
+## Supported Transfer Types
+
+- Off-chain rails: `wire`, `ach_credit`, `same_day_ach_credit`, `ach_debit`, `same_day_ach_debit`, `rtp_credit`.
+- On-chain (examples): `canton`, `base`, `polygon`, `solana`, `stellar`, `xrp_ledger`, … (use the API identifiers from Coverage → Stablecoins & Blockchains).
+
+## Custodial (Internal) Addresses
+
+Brale provides custodial wallets that allow businesses to securely hold and transfer stablecoins on behalf of themselves or their customers. Custodial addresses support all supported blockchains.
+
+When your customer's Account is onboarded, Brale automatically generates internal custodial addresses on all supported blockchains. You do not need to create them manually.
+
+## Non-Custodial (External) Addresses
+
+Create external addresses to link on-chain wallets or off-chain bank endpoints.
+
+Addresses can be created in two ways:
+
+- Addresses API
+- Plaid
+
+**POST** `/accounts/{account_id}/addresses/external`
+
+Offchain addresses supporting ach and rtp related transfer_types can also be registered via Plaid. See the full guide below.
+
+### Create onchain external address
+
+The blockchains the address supports. See [Supported Chains](/coverage/stablecoins-and-blockchains) for the full list. Each address is associated with only one blockchain environment (e.g., Solana, EVM).
+
+```json title="Request"
+{
+  "name": "Non-Custodial (External) Wallet",
+  "transfer_types": ["ethereum", "base"],
+  "wallet_address": "0x123456789"
+}
+```
+
+```json title="Response"
+{
+  "id": "2VcUIIsgARwVbEGlIYbhg6fGG57"
+}
+```
+
+### Create Non-Custodial (External) Address for ACH Credits
+
+These support the following `transfer_types` and enable USD to be sent to a destination in a transfer.
+
+- `ach_credit`
+- `same_day_ach_credit`
+
+```json title="Request"
+{
+  "owner": "Jane Doe",
+  "transfer_types": ["ach_credit", "same_day_ach_credit"],
+  "account_number": "1234567890",
+  "routing_number": "063108680",
+  "name": "Example Bank",
+  "bank_address": {
+    "street_line_1": "100 Example St",
+    "street_line_2": "Suite 500",
+    "city": "Springfield",
+    "state": "CA",
+    "zip": "90001"
+  },
+  "beneficiary_address": {
+    "street_line_1": "100 Example St",
+    "street_line_2": "Suite 500",
+    "city": "Springfield",
+    "state": "CA",
+    "zip": "90001"
+  },
+  "account_type": "checking"
+}
+```
+
+```json title="Response"
+{
+  "id": "2VcUIIsgARwVbEGlIYbhg6fGG57"
+}
+```
+
+### Create External Address for RTP
+
+Real-time payments (`rtp_credit`) work slightly differently from other transfer types.
+
+RTP eligibility is determined asynchronously by our banking partner after the bank account is registered. When you create an off-chain external address and include `rtp_credit` in `transfer_types`, the **initial** Address may only list ACH rails, for example:
+
+```json title="Response"
+{
+  "transfer_types": ["ach_credit", "same_day_ach_credit"]
+}
+```
+
+After the bank confirms that the account is RTP-enabled, Brale will update the Address in place and add `rtp_credit` to transfer_types. This typically happens shortly after creation.
+
+### Update Address transfer types
+
+Sometimes you'll want an address to gain new capabilities over time. For example:
+
+- You want an EVM onchain address to start supporting an additional chain (e.g., `ethereum` in addition to `base`).
+- A bank account that initially only supports `wire` is upgraded to also support `ach_credit`.
+
+Instead of creating a new Address, you can add new `transfer_types` to an existing Address (and optionally update its `name`):
+
+Onchain Address Example - add a new EVM chain
+
+Suppose you have a non-custodial EVM wallet Address that currently only supports `base` and want to add `ethereum`:
+
+**PATCH** `/accounts/{account_id}/addresses/{{address_id}}`
+
+```json title="Request"
+{
+  "additional_transfer_types": ["ethereum"]
+}
+```
+
+Response
+
+```json title="Response"
+{
+  "id": "2VcUIIsgARwVbEGlIYbhg6fGG57",
+  "type": "external",
+  "name": "EVM Wallet",
+  "wallet_address": "0x123456789",
+  "transfer_types": ["base", "ethereum"]
+}
+```
+
+Note: All onchain transfer_types on a single Address must belong to the same blockchain environment (for example, all EVM mainnets). You cannot mix incompatible environments on the same Address.
+
+Offchain Address Example - add ACH Credit to a wire-only bank Address
+
+Suppose you have an off-chain bank Address that currently only supports wires and now want to update to include ACH and SDACH.
+
+**PATCH** `/accounts/{account_id}/addresses/{{address_id}}`
+
+```json title="Request"
+{
+  "additional_transfer_types": ["same_day_ach_credit", "ach_credit"]
+}
+```
+
+Response
+
+```json title="Response"
+{
+  "id": "35zDQqWZuiITc8emZc3T7viZSAV",
+  "name": "checking 7890",
+  "owner": "Jane Doe",
+  "status": "active",
+  "transfer_types": ["rtp_credit", "same_day_ach_credit", "wire"],
+  "created": "2025-11-25T20:53:12.655227Z",
+  "bank_address": {
+    "state": "CA",
+    "zip": "90001",
+    "city": "Springfield",
+    "country": "US",
+    "street_line_1": "100 Example St",
+    "street_line_2": "Suite 500"
+  },
+  "beneficiary_address": {
+    "state": "CA",
+    "zip": "90001",
+    "city": "Springfield",
+    "country": "US",
+    "street_line_1": "100 Example St",
+    "street_line_2": "Suite 500"
+  },
+  "account_number": "****7890",
+  "needs_update": false,
+  "account_type": "checking",
+  "last_updated": "2025-11-25T21:35:40.898085Z",
+  "routingNumber": "063108680"
+}
+```
+
+#### Updating Address Name
+
+You can also use this endpoint to update the human-readable name (alias) of an Address. You can send name on its own, or together with additional_transfer_types:
+
+```json title="Request"
+{
+  "name": "My EVM Wallet"
+  "additional_transfer_types": ["base"]
+}
+```
+
+#### Behavior
+
+`additional_transfer_types` is a list of transfer types to **add** to this Address. These are merged into the existing `transfer_types`.
+
+- The values in `additional_transfer_types` are **added** to the Address’s existing `transfer_types`.
+- Existing `transfer_types` are preserved even if you don’t include them in the request.
+- Sending a transfer type that is already enabled is idempotent and has no effect.
+- This endpoint can also be used to update the `name` of the address, a human readable alias.
+
+## Create Addresses through Plaid
+
+This guide walks you through how to enable your customers to securely link their bank accounts via Plaid. After linking, the new Addresses can be used for ACH debits, ACH credits and RTP.
+
+### Overview of the Flow
+
+1. Request a Plaid Link Token from Brale.
+2. Initialize Plaid Link in your front-end using the `link_token`.
+3. Plaid returns a `public_token` once the user has successfully linked their account.
+4. Exchange the `public_token` with Brale to finalize the linking process.
+5. Fetch the newly created Address for the end user, then proceed with transfers, etc.
+
+### Request a Plaid Link Token
+
+**POST** `https://api.brale.xyz/accounts/{account_id}/plaid/link_token`
+
+```json title="Request"
+{
+  "date_of_birth": "1990-01-01", // Optional
+  "email_address": "user@example.com", // Optional
+  "legal_name": "John Doe", // Optional
+  "phone_number": "+1234567890" // Optional
+}
+```
+
+```json title="Response"
+{
+  "expiration": "2025-03-23T03:22:34.086Z",
+  "link_token": "link_token_XYZ",
+  "callback_url": "https://api.brale.xyz/exchange_public_token/{unique-id}"
+}
+```
+
+| Parameters     | Description                                                                        |
+| -------------- | ---------------------------------------------------------------------------------- |
+| `link_token`   | The token you will use to launch Plaid Link in your front-end or mobile app.       |
+| `expiration`   | Time at which the `link_token` will no longer be valid.                            |
+| `callback_url` | The endpoint to which you should send the `public_token` to finalize the exchange. |
+
+### Render the Plaid Link SDK
+
+In your front-end, initialize Plaid Link using the link_token you received.
+
+For production apps, it's recommended you send the public_token to your own backend (over HTTPS), and then have your backend call our exchange endpoint. That way, you avoid exposing your own platform API keys in the browser.
+
+### Register Address (exchange the public token)
+
+Send us the public_token you received from Plaid Link. Brale securely exchanges it for a Plaid access_token server-side and creates an Address on the specified Account.
+
+**POST** `https://api.brale.xyz/accounts/{account_id}/plaid/register-account`
+
+```json title="Request"
+{
+  "public_token": "public_token_XYZ",
+  "customer_webhook_url": "https://mywebhook.com",
+  "transfer_types": ["ach_debit", "same_day_ach_debit", "ach_credit", "same_day_ach_credit"]
+}
+```
+
+```json title="Response"
+{
+  "address_id": "34yknnMShvDbSW6tQg4HLlN41QO"
+}
+```
+
+After this call completes, our system retrieves the linked bank account and creates an Address for the account the user selected.
+
+### Check for newly created Addresses
+
+Shortly after exchanging the public token, the user's bank accounts are idempotently created as an Address which you can query.
+
+**GET** `https://api.brale.xyz/accounts/account_id/addresses/{id}`
+
+```json title="Response"
+{
+  "name": "Business Checking Account",
+  "transfer_type": ["ACH", "Wire"],
+  "bank_details": {
+    "owner": "Jane Doe",
+    "account_number": "1234567890",
+    "routing_number": "987654321",
+    "name": "Example Bank",
+    "address": {
+      "street_line_1": "100 Example St",
+      "street_line_2": "Suite 500",
+      "city": "Springfield",
+      "state": "CA",
+      "zip": "90001",
+      "country": "US"
+    },
+    "account_type": "checking"
+  }
+}
+```
+
+At this point, you can initiate ACH debits or other transactions using these new Addresses.
+
+## Handling Re-Authentication
+
+When Plaid signals that an Item requires user action (e.g., credentials changed), Brale can notify you via webhook and you can present a Plaid update Link flow to the user.
+
+### Receive Brale webhook
+
+Brale will `POST` a JSON payload when re-auth is required to the `customer_webhook` you provide during the exchange step.
+
+```json title="Example payload"
+{
+  "reason": "Plaid item requires re-authentication",
+  "timestamp": "2025-09-13T17:17:00Z",
+  "event_type": "ITEM_LOGIN REQUIRED",
+  "address_id": "address_id123"
+}
+```
+
+### Check status
+
+**GET** `https://api.brale.xyz/accounts/{account_id}/addresses/{address_id}`
+
+```json title="Response"
+{
+  "status": "active",
+  "last_updated": "2025-09-13T17:17:00Z",
+  "address_id": "34yxvqP90NfeeYkQGriO6bSfn1K",
+  "needs_update": true
+}
+```
+
+### Request an updated link token
+
+**POST** `https://api.brale.xyz/accounts/{account_id}/addresses/{address_id}/update-link-token`
+
+```json title="Response"
+{
+  "link_token": "link_token_XYZ"
+}
+```
+
+Open Plaid Link again with this `link_token`. Plaid will streamline the flow and only ask the user to re-authenticate. Run Step 3 again with the new `public_token` (same endpoint). The existing Address is updated in place and retains the same `address_id`.
+
+## Fetching Addresses
+
+Retrieve all addresses associated with the authenticated Account.
+
+This endpoint returns all addresses (whether internal or external) linked to the Account.
+
+**GET** `/accounts/{account_id}/addresses`
+
+```json title="Response"
+{
+  "addresses": [
+    {
+      "id": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+      "status": "active",
+      "name": "Internal Custodial Wallet",
+      "type": "Internal",
+      "address": "73uyt9HkEqx9bThYXWaUBP67sWsiJEsyJ5rSCieDx5me",
+      "created": "2023-03-07T17:31:37.997502Z",
+      "transfer_types": ["solana", "solana_devnet"]
+    },
+    {
+      "id": "34yxvqP90NfeeYkQGriO6bSfn1K",
+      "name": "THE BANK OF TAMPA",
+      "owner": "Jane Doe",
+      "status": "active",
+      "transfer_types": ["ach_credit", "same_day_ach_credit"],
+      "created": "2025-11-03T19:57:25.965990Z",
+      "bank_address": {
+        "state": "CA",
+        "zip": "90001",
+        "city": "Springfield",
+        "country": "US",
+        "street_line_1": "100 Example St",
+        "street_line_2": "Suite 500"
+      },
+      "beneficiary_address": {
+        "state": "CA",
+        "zip": "90001",
+        "city": "Springfield",
+        "country": "US",
+        "street_line_1": "100 Example St",
+        "street_line_2": "Suite 500"
+      },
+      "account_number": "****7890",
+      "needs_update": false,
+      "last_updated": "2025-11-03T19:57:26.801044Z",
+      "routingNumber": "063108680",
+      "account_type": "checking"
+    },
+    {
+      "id": "34yGFQf7tP1HJCPAWNGaN4rh4nX",
+      "name": "JPMORGAN CHASE BANK, NA",
+      "owner": "Alberta Bobbeth Charleson",
+      "status": "active",
+      "transfer_types": ["ach_debit"],
+      "created": "2025-11-03T13:58:14.528239Z",
+      "bank_address": null,
+      "beneficiary_address": null,
+      "account_number": "****1111",
+      "needs_update": false,
+      "last_updated": "2025-11-03T13:58:14.528239Z",
+      "routingNumber": "021000021",
+      "account_type": "savings"
+    }
+  ]
+}
+```
+
+### Fetching an Internal Balance
+
+You can query the stablecoin balance of an internal address.
+
+**GET** `/accounts/{account_id}/addresses/address_id/balance?transfer_type=chain&value_type=token`
+
+```json title="Response"
+{
+  "address": {
+    "id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
+    "address": "0xcdEA458750b9A8D6C4Ba8B3D68CE98Ba2330352A"
+  },
+  "balance": {
+    "value": "45314.07",
+    "currency": "USD"
+  },
+  "value_type": "SBC",
+  "transfer_type": "base"
+}
+```
+
+### Filtering Addresses
+
+You can narrow results on `GET /accounts/{account_id}/addresses` with optional query parameters.
+
+## Query Parameters
+
+| Param           | Type              | Description                                                                           |
+| --------------- | ----------------- | ------------------------------------------------------------------------------------- |
+| `address`       | string            | Exact on-chain address (e.g., EVM, Solana).                                           |
+| `type`          | enum              | Filter by address type: `internal` \| `external`.                                     |
+| `transfer_type` | enum (repeatable) | Filter by one or more transfer types (e.g., `ethereum`, `base`, `solana`, `stellar`). |
+
+## Examples
+
+External addresses usable on Solana OR Base
+
+**GET** `/accounts/{account_id}/addresses?type=external&transfer_type=solana&transfer_type=base`
+
+Exact EVM address (case-insensitive)
+
+**GET** `/accounts/{account_id}/addresses?address=0xEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE`
+
+Internal EVM addresses that support Ethereum
+
+**GET** `/accounts/{account_id}/addresses?type=internal&transfer_type=ethereum`

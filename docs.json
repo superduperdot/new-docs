@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Brale API Docs",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
@@ -11,38 +11,55 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Docs",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Overview",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "overview/introduction",
+              "overview/quick-start",
+              "overview/sandbox-and-testnet"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Key concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "key-concepts/api-concepts-overview",
+              "key-concepts/authentication",
+              "key-concepts/accounts",
+              "key-concepts/addresses",
+              "key-concepts/automations",
+              "key-concepts/financial-institutions",
+              "key-concepts/idempotency",
+              "key-concepts/transfers"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Guides",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "guides/fiat-to-stablecoin-onramp",
+              "guides/stablecoin-to-fiat-offramp",
+              "guides/stablecoin-to-stablecoin-swap",
+              "guides/stablecoin-issuance",
+              "guides/stablecoin-payouts",
+              "guides/2nd-and-3rd-party-transfers",
+              "guides/tokenization",
+              "guides/custody",
+              "guides/canton-token-standard"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Coverage",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "coverage/payment-methods",
+              "coverage/stablecoins-and-blockchains"
+            ]
+          },
+          {
+            "group": "IO",
+            "pages": [
+              "io/introduction",
+              "io/url-navigation"
             ]
           }
         ]
@@ -51,18 +68,31 @@
         "tab": "API reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "API overview",
             "pages": [
-              "api-reference/introduction"
+              "api-reference/brale-introduction"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Endpoints",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/brale/list-accounts",
+              "api-reference/brale/create-account",
+              "api-reference/brale/get-account",
+              "api-reference/brale/list-transfers",
+              "api-reference/brale/create-transfer",
+              "api-reference/brale/get-transfer",
+              "api-reference/brale/list-addresses",
+              "api-reference/brale/create-address",
+              "api-reference/brale/get-address-balance",
+              "api-reference/brale/list-automations",
+              "api-reference/brale/create-automations",
+              "api-reference/brale/get-automations",
+              "api-reference/brale/list-financial-institutions",
+              "api-reference/brale/create-financial-institution",
+              "api-reference/brale/get-financial-institution",
+              "api-reference/brale/create-plaid-link-token",
+              "api-reference/brale/register-financial-institution-account-via-plaid-and-return-address-id"
             ]
           }
         ]
@@ -71,33 +101,33 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
+          "anchor": "Dashboard",
+          "href": "https://app.brale.xyz",
           "icon": "book-open-cover"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "Status",
+          "href": "https://status.brale.xyz",
+          "icon": "circle-info"
         }
       ]
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/images/brale/brale-logo-light.svg",
+    "dark": "/images/brale/brale-logo-dark.svg"
   },
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "label": "Telegram",
+        "href": "https://t.me/bralecommunity"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "href": "https://app.brale.xyz"
     }
   },
   "contextual": {
@@ -114,9 +144,8 @@
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "github": "https://github.com/Brale-xyz"
     }
-  }
+  },
+  "openapi": "/api-reference/brale-openapi.yaml"
 }

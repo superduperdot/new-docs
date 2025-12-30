@@ -1,0 +1,71 @@
+---
+title: 'Sandbox & Testnet'
+---
+
+<p class="intro-subheading">Brale provides a sandbox environment to simulate requests.</p>
+
+Only testnets (Sepolia, Solana Devnet, Base Sepolia, etc.) are supported in sandbox. Fiat flows and blockchain mainnets (Ethereum, Solana, etc) are not supported in sandbox.
+
+See the full set of [supported blockchain networks](/coverage/stablecoins-and-blockchains).
+
+## 1. Create API Credentials scoped to Testnet
+
+Create an application on the Settings page in the Dashboard.
+
+![Image](/images/brale/settings-api-credentials-dark@2x.png)
+
+Select `Testnet` as Network and enable all resources.
+
+![Image](/images/brale/settings-api-create-application-dark@2x.png)
+
+## 2. Mint Tokens on Testnets
+
+When you submit a mint in sandbox, we skip the fiat leg and immediately mint on-chain. This simulates a onramp transaction, and also acts as a faucet to easily mint tokens to use in other flows (payouts, etc.).
+
+**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+
+```json title="Request"
+{
+  "amount": {
+    "value": "100",
+    "currency": "USD"
+  },
+  "source": {
+    "value_type": "USD",
+    "transfer_type": "wire"
+  },
+  "destination": {
+    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
+    "value_type": "SBC",
+    "transfer_type": "solana_devnet"
+  }
+}
+```
+
+## 3. Burn Tokens on Testnets
+
+When you submit a redemption in sandbox, we immediately burn on-chain and skip the fiat payout. This simulates an offramp transaction.
+
+**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+
+```json title="Request"
+{
+  "amount": {
+    "value": "100",
+    "currency": "USD"
+  },
+  "source": {
+    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
+    "value_type": "SBC",
+    "transfer_type": "solana_devnet"
+  },
+  "destination": {
+    "value_type": "USD",
+    "transfer_type": "wire"
+  }
+}
+```
+
+## Follow the Quick Start Guide
+
+Follow [Quick Start - Your First Stablecoin Transfer](/overview/quick-start) for next steps to get deeper with the Brale API.

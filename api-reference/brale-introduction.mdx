@@ -1,0 +1,39 @@
+---
+title: "Brale Issuance and Orchestration API"
+description: "Stablecoin issuance, orchestration, onramps, offramps, and swaps via the Brale API."
+---
+
+Brale supports stablecoin issuance and orchestration so you can create, move, and manage stablecoins across chains. Use this API for:
+
+- Stablecoin onramps and offramps (fiat ↔ stablecoin)
+- Stablecoin swaps across supported chains
+- Custody and payouts
+- Programmatic issuance for your own stablecoins
+
+**ID format**: All resource IDs (account_id, address_id, financial_institution_id, automation_id, etc.) are KSUIDs (26-character alphanumeric, time-sortable).
+
+**Version**: 2.3.1
+
+## Base URLs
+
+- Auth: `https://auth.brale.xyz`
+- API: `https://api.brale.xyz`
+
+## Authentication
+
+Use OAuth2 Client Credentials to obtain a bearer token, then include it in the `Authorization` header for all requests.
+
+```bash
+curl --request POST \\
+  --url https://auth.brale.xyz/oauth2/token \\
+  --header 'Authorization: Basic ${BASE_64_OF(client_id:client_secret)}' \\
+  --header 'Content-Type: application/x-www-form-urlencoded' \\
+  --data grant_type=client_credentials
+```
+
+## Next steps
+
+- Try endpoints in the API reference using the built-in playground.
+- Review key concepts (accounts, addresses, transfers, automations) to understand how resources relate.
+- See coverage for supported payment methods and blockchains.
+

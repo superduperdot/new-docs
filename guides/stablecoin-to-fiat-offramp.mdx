@@ -1,0 +1,113 @@
+---
+title: 'Stablecoin to Fiat (Offramp)'
+---
+
+<p class="intro-subheading">
+  Brale makes it easy for you and your customers to convert stablecoins into USD via Wire transfer,
+  ACH, and RTP.
+</p>
+
+In order to submit a stablecoin-to-fiat transaction, first you need to:
+
+- Create an [Account](/key-concepts/accounts) respresenting your customer
+- Create an [Address](/key-concepts/addresses) which is your customer's bank account where Brale will deposit USD
+- Deposit stablecoins to a Brale custodial address (address with type `internal`)
+
+## Link an Address to your customer's Account
+
+You can add addresses in two ways:
+
+1. Addresses API
+2. Plaid
+
+Here is an example of directly adding an offchain address.
+
+**POST** `https://api.brale.xyz/accounts/account_id/addresses/external`
+
+```json title="Request"
+{
+  "owner": "Jane Doe",
+  "account_number": "1234567890",
+  "routing_number": "987654321",
+  "name": "Example Bank",
+  "transfer_types": ["ach_credit", "same_day_ach_credit", "rtp_credit"]
+  "beneficiary_address": {
+    "street_line_1": "100 Example St",
+    "street_line_2": "Suite 500",
+    "city": "Springfield",
+    "state": "CA",
+    "zip": "90001"
+  },
+  "bank_address": {
+    "street_line_1": "100 Example St",
+    "street_line_2": "Suite 500",
+    "city": "Springfield",
+    "state": "CA",
+    "zip": "90001"
+  },
+  "account_type": "checking"
+}
+```
+
+```json title="Response"
+{
+  "id": "34yxvqP90NfeeYkQGriO6bSfn1K",
+  "name": "THE BANK OF TAMPA",
+  "owner": "Jane Doe",
+  "status": "active",
+  "transfer_types": ["ach_credit", "same_day_ach_credit", "rtp_credit"],
+  "created": "2025-11-03T19:57:25.965990Z",
+  "bank_address": {
+    "state": "CA",
+    "zip": "90001",
+    "city": "Springfield",
+    "country": "US",
+    "street_line_1": "100 Example St",
+    "street_line_2": "Suite 500"
+  },
+  "beneficiary_address": {
+    "state": "CA",
+    "zip": "90001",
+    "city": "Springfield",
+    "country": "US",
+    "street_line_1": "100 Example St",
+    "street_line_2": "Suite 500"
+  },
+  "account_number": "****7890",
+  "needs_update": false,
+  "last_updated": "2025-11-03T19:57:26.801044Z",
+  "routingNumber": "063108680",
+  "account_type": "checking"
+}
+```
+
+### RTP Enablement
+
+Offramps via RTP use the `rtp_credit` transfer_type on the destination Address. RTP capability is enabled asynchronously by our banking partner, so a newly created bank Address may initially not show `rtp_credit` even though it is eligible for real-time payments. Only treat an Address as RTP-capable once `"rtp_credit"` appears in its `transfer_types`. See **Key Concepts → Addresses → Create External Address for RTP** for details.
+
+## Stablecoin to USD via Wire
+
+Once your customer has anAddress and stablecoins are held in a Brale controlled address, you can submit a Transfer request with the destination of the address.
+
+**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+
+```json title="Request"
+{
+  "amount": {
+    "value": "100",
+    "currency": "USD"
+  },
+  "source": {
+    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
+    "value_type": "YSBC",
+    "transfer_type": "Solana"
+  },
+  "destination": {
+    "address_id": "2AbCdEfGHiJkLmN0pQrStUvWxYz",
+    "value_type": "USD",
+    "transfer_type": "wire"
+  }
+}
+```
+
+Brale will burn the stablecoins from the Source Address immediately, and then transfer USD to the destination bank account.
