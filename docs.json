@@ -7,10 +7,7 @@
     "light": "#6938EF",
     "dark": "#18181B"
   },
-  "seo": {
-    "indexing": "all"
-  },
-  "favicon": "/images/brale/favicon.svg",
+  "favicon": "/favicon.svg",
   "navigation": {
     "global": {
       "anchors": [
@@ -121,7 +118,7 @@
               "guides/stablecoin-issuance",
               "guides/stablecoin-payouts",
               "guides/2nd-and-3rd-party-transfers",
-              "guides/custody",
+              "guides/managed-accounts",
               "guides/canton-token-standard",
               "guides/tokenization"
             ]
