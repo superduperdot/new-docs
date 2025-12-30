@@ -115,7 +115,10 @@
         ]
       },
       {
-        "tab": "Documentation"
+        "tab": "Documentation",
+        "pages": [
+          "documentation/introduction"
+        ]
       }
     ]
   },
