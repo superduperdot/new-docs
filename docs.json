@@ -94,7 +94,7 @@
             "group": "Coverage",
             "pages": [
               "docs/coverage/transfer-types",
-              "coverage/stablecoins-and-blockchains"
+              "coverage/value-types"
             ]
           },
           {
