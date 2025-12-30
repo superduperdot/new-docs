@@ -28,6 +28,12 @@
     },
     "tabs": [
       {
+        "tab": "Documentation",
+        "pages": [
+          "documentation/introduction"
+        ]
+      },
+      {
         "tab": "Docs",
         "groups": [
           {
@@ -118,12 +124,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "Documentation",
-        "pages": [
-          "documentation/introduction"
-        ]
       }
     ]
   },
@@ -132,12 +132,7 @@
     "dark": "/images/brale/brale-logo-dark.svg"
   },
   "navbar": {
-    "links": [
-      {
-        "label": "Telegram",
-        "href": "https://t.me/bralecommunity"
-      }
-    ],
+    "links": [],
     "primary": {
       "type": "button",
       "label": "Dashboard",
