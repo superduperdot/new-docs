@@ -35,26 +35,11 @@
       },
       {
         "tab": "Tools",
-        "products": [
-          {
-            "product": "Commons Repo",
-            "pages": [
-              "documentation/commons-repo",
-              "documentation/add-your-stablecoin"
-            ]
-          },
-          {
-            "product": "Commons Stablecoin Format",
-            "pages": [
-              "documentation/commons-stablecoin-format"
-            ]
-          },
-          {
-            "product": "Calculators",
-            "pages": [
-              "documentation/calculators"
-            ]
-          }
+        "pages": [
+          "documentation/commons-repo",
+          "documentation/add-your-stablecoin",
+          "documentation/commons-stablecoin-format",
+          "documentation/calculators"
         ]
       },
       {
