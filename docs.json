@@ -12,13 +12,13 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Dashboard",
-          "icon": "book-open-cover",
+          "anchor": "API Keys",
+          "icon": "key",
           "href": "https://app.brale.xyz"
         },
         {
-          "anchor": "Status",
-          "icon": "circle-info",
+          "anchor": "API Logs",
+          "icon": "database",
           "href": "https://status.brale.xyz"
         }
       ]
