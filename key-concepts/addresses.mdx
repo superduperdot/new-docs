@@ -1,10 +1,10 @@
 ---
-title: 'Addresses'
+title: "Addresses"
 ---
 
 <p class="intro-subheading">
-  Addresses are represented by an `address_id`, which uniquely identifies a wallet or account for a
-  specific `transfer_type`.
+Addresses are represented by an `address_id`, which uniquely identifies a wallet or account for a specific `transfer_type`.
+
 </p>
 
 > IDs are KSUIDs (26-char, time-sortable); copy/paste carefully.
@@ -23,7 +23,7 @@ Whether internal or external, all addresses possess:
 
 ## Supported Transfer Types
 
-- Off-chain rails: `wire`, `ach_credit`, `same_day_ach_credit`, `ach_debit`, `same_day_ach_debit`, `rtp_credit`.
+- Off-chain rails: `wire`, `ach_credit`, `same_day_ach_credit`, `ach_debit`, `rtp_credit`.
 - On-chain (examples): `canton`, `base`, `polygon`, `solana`, `stellar`, `xrp_ledger`, … (use the API identifiers from Coverage → Stablecoins & Blockchains).
 
 ## Custodial (Internal) Addresses
@@ -49,7 +49,7 @@ Offchain addresses supporting ach and rtp related transfer_types can also be reg
 
 The blockchains the address supports. See [Supported Chains](/coverage/value-types) for the full list. Each address is associated with only one blockchain environment (e.g., Solana, EVM).
 
-```json title="Request"
+```json Request
 {
   "name": "Non-Custodial (External) Wallet",
   "transfer_types": ["ethereum", "base"],
@@ -57,7 +57,7 @@ The blockchains the address supports. See [Supported Chains](/coverage/value-typ
 }
 ```
 
-```json title="Response"
+```json Response
 {
   "id": "2VcUIIsgARwVbEGlIYbhg6fGG57"
 }
@@ -70,7 +70,7 @@ These support the following `transfer_types` and enable USD to be sent to a dest
 - `ach_credit`
 - `same_day_ach_credit`
 
-```json title="Request"
+```json Request
 {
   "owner": "Jane Doe",
   "transfer_types": ["ach_credit", "same_day_ach_credit"],
@@ -95,7 +95,7 @@ These support the following `transfer_types` and enable USD to be sent to a dest
 }
 ```
 
-```json title="Response"
+```json Response
 {
   "id": "2VcUIIsgARwVbEGlIYbhg6fGG57"
 }
@@ -107,7 +107,7 @@ Real-time payments (`rtp_credit`) work slightly differently from other transfer 
 
 RTP eligibility is determined asynchronously by our banking partner after the bank account is registered. When you create an off-chain external address and include `rtp_credit` in `transfer_types`, the **initial** Address may only list ACH rails, for example:
 
-```json title="Response"
+```json Response
 {
   "transfer_types": ["ach_credit", "same_day_ach_credit"]
 }
@@ -130,7 +130,7 @@ Suppose you have a non-custodial EVM wallet Address that currently only supports
 
 **PATCH** `/accounts/{account_id}/addresses/{{address_id}}`
 
-```json title="Request"
+```json Request
 {
   "additional_transfer_types": ["ethereum"]
 }
@@ -138,7 +138,7 @@ Suppose you have a non-custodial EVM wallet Address that currently only supports
 
 Response
 
-```json title="Response"
+```json Response
 {
   "id": "2VcUIIsgARwVbEGlIYbhg6fGG57",
   "type": "external",
@@ -156,7 +156,7 @@ Suppose you have an off-chain bank Address that currently only supports wires an
 
 **PATCH** `/accounts/{account_id}/addresses/{{address_id}}`
 
-```json title="Request"
+```json Request
 {
   "additional_transfer_types": ["same_day_ach_credit", "ach_credit"]
 }
@@ -164,7 +164,7 @@ Suppose you have an off-chain bank Address that currently only supports wires an
 
 Response
 
-```json title="Response"
+```json Response
 {
   "id": "35zDQqWZuiITc8emZc3T7viZSAV",
   "name": "checking 7890",
@@ -198,7 +198,7 @@ Response
 
 You can also use this endpoint to update the human-readable name (alias) of an Address. You can send name on its own, or together with additional_transfer_types:
 
-```json title="Request"
+```json Request
 {
   "name": "My EVM Wallet"
   "additional_transfer_types": ["base"]
@@ -230,7 +230,7 @@ This guide walks you through how to enable your customers to securely link their
 
 **POST** `https://api.brale.xyz/accounts/{account_id}/plaid/link_token`
 
-```json title="Request"
+```json Request
 {
   "date_of_birth": "1990-01-01", // Optional
   "email_address": "user@example.com", // Optional
@@ -239,7 +239,7 @@ This guide walks you through how to enable your customers to securely link their
 }
 ```
 
-```json title="Response"
+```json Response
 {
   "expiration": "2025-03-23T03:22:34.086Z",
   "link_token": "link_token_XYZ",
@@ -265,7 +265,7 @@ Send us the public_token you received from Plaid Link. Brale securely exchanges 
 
 **POST** `https://api.brale.xyz/accounts/{account_id}/plaid/register-account`
 
-```json title="Request"
+```json Request
 {
   "public_token": "public_token_XYZ",
   "customer_webhook_url": "https://mywebhook.com",
@@ -273,7 +273,7 @@ Send us the public_token you received from Plaid Link. Brale securely exchanges 
 }
 ```
 
-```json title="Response"
+```json Response
 {
   "address_id": "34yknnMShvDbSW6tQg4HLlN41QO"
 }
@@ -287,7 +287,7 @@ Shortly after exchanging the public token, the user's bank accounts are idempote
 
 **GET** `https://api.brale.xyz/accounts/account_id/addresses/{id}`
 
-```json title="Response"
+```json Response
 {
   "name": "Business Checking Account",
   "transfer_type": ["ACH", "Wire"],
@@ -318,7 +318,7 @@ When Plaid signals that an Item requires user action (e.g., credentials changed)
 
 Brale will `POST` a JSON payload when re-auth is required to the `customer_webhook` you provide during the exchange step.
 
-```json title="Example payload"
+```json Example payload
 {
   "reason": "Plaid item requires re-authentication",
   "timestamp": "2025-09-13T17:17:00Z",
@@ -331,7 +331,7 @@ Brale will `POST` a JSON payload when re-auth is required to the `customer_webho
 
 **GET** `https://api.brale.xyz/accounts/{account_id}/addresses/{address_id}`
 
-```json title="Response"
+```json Response
 {
   "status": "active",
   "last_updated": "2025-09-13T17:17:00Z",
@@ -344,7 +344,7 @@ Brale will `POST` a JSON payload when re-auth is required to the `customer_webho
 
 **POST** `https://api.brale.xyz/accounts/{account_id}/addresses/{address_id}/update-link-token`
 
-```json title="Response"
+```json Response
 {
   "link_token": "link_token_XYZ"
 }
@@ -360,7 +360,7 @@ This endpoint returns all addresses (whether internal or external) linked to the
 
 **GET** `/accounts/{account_id}/addresses`
 
-```json title="Response"
+```json Response
 {
   "addresses": [
     {
@@ -424,7 +424,7 @@ You can query the stablecoin balance of an internal address.
 
 **GET** `/accounts/{account_id}/addresses/address_id/balance?transfer_type=chain&value_type=token`
 
-```json title="Response"
+```json Response
 {
   "address": {
     "id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
