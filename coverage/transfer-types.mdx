@@ -1,8 +1,8 @@
-title: 'Transfer Types'
-description: 'Supported transfer_type identifiers and names for moving value on/off chain.'
+---
+title: "Transfer Types"
 ---
 
-Brale supports these transfer types for funding and payouts. Use them in `transfer_type` fields on addresses and transfers. Source: [TransferType.json](https://github.com/Brale-xyz/commons/blob/main/Resources/TransferType.json).
+Brale supports these transfer types (onchain and offchain payment rails) for funding and payouts. Use them in `transfer_type` fields on addresses and transfers. Source: [TransferType.json](https://github.com/Brale-xyz/commons/blob/main/Resources/TransferType.json).
 
 ## Onchain
 
@@ -22,29 +22,31 @@ Brale supports these transfer types for funding and payouts. Use them in `transf
 | `kusama`               | Kusama     |
 | `spark`                | Spark      |
 | `xrp_ledger`           | XRP Ledger |
+| `radius`               | Radius     |
+| `tempo`                | Tempo      |
 
 ## Offchain
 
-| transfer_type (API id)    | Name                  |
-| ------------------------- | --------------------- |
-| `wire`                    | Wire Transfer         |
-| `ach-debit`               | ACH Debit             |
-| `ach-credit`              | ACH Credit            |
-| `same-day-ach-credit`     | Same Day ACH Credit   |
-| `rtp-credit`              | RTP Credit            |
+| transfer_type (API id) | Name                |
+| ---------------------- | ------------------- |
+| `wire`                 | Wire Transfer       |
+| `ach_debit`            | ACH Debit           |
+| `ach_credit`           | ACH Credit          |
+| `same_day_ach_credit`  | Same Day ACH Credit |
+| `rtp_credit`           | RTP Credit          |
 
 ## Testnet transfer types
 
 Use these values when working in testnet. They mirror the corresponding mainnet chains.
 
-| transfer_type (API id) | Network                |
-| ---------------------- | ---------------------- |
-| `base_sepolia`         | Base Sepolia Testnet   |
-| `canton_testnet`       | Canton Testnet         |
-| `amoy`                 | Polygon Amoy Testnet   |
+| transfer_type (API id) | Network                  |
+| ---------------------- | ------------------------ |
+| `base_sepolia`         | Base Sepolia Testnet     |
+| `canton_testnet`       | Canton Testnet           |
+| `amoy`                 | Polygon Amoy Testnet     |
 | `sepolia`              | Ethereum Sepolia Testnet |
-| `solana_devnet`        | Solana Devnet          |
-| `xion_testnet`         | Xion Testnet           |
-| `tempo_testnet`        | Tempo Testnet          |
+| `solana_devnet`        | Solana Devnet            |
+| `xion_testnet`         | Xion Testnet             |
+| `tempo_testnet`        | Tempo Testnet            |
 
-If you need additional rails, contact support@brale.xyz.
+If you need additional rails, contact [support@brale.xyz](mailto:support@brale.xyz).
