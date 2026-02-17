@@ -4,6 +4,12 @@ artifacts/
 docs/
 screenshots/
 
+# QA reports
+*.report.json
+*-report.json
+QA-REPORT.md
+CALLOUT-VERIFICATION-REPORT.md
+
 # Node
 node_modules/
 
@@ -12,10 +18,15 @@ node_modules/
 .vscode/
 .idea/
 
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+
 # OS
 .DS_Store
 Thumbs.db
 
-# Review artifacts
-*.report.json
-documentation-review-report.json
+# Mintlify build
+.mintlify/

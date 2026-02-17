@@ -28,7 +28,7 @@ The OpenAPI spec declares `application/vnd.api+json` but runtime returns `applic
 ## Accept Header
 
 <Warning>
-**Do not set `Accept: application/json`** in your requests. The Brale API (via its CDN layer) returns HTTP 500 when this header is present. Omit the `Accept` header entirely — the API returns JSON by default.
+**Do not set `Accept: application/json`** in your requests. The API may reject requests with this header. Omit the `Accept` header entirely — the API returns JSON by default.
 </Warning>
 
 If your HTTP client requires an explicit Accept header, use `Accept: */*`.
