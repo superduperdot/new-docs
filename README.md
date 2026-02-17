@@ -1,43 +1,80 @@
-# Mintlify Starter Kit
+# Brale API Documentation
 
-Use the starter kit to get your docs deployed and ready to customize.
+Developer documentation for the [Brale](https://brale.xyz) stablecoin issuance and orchestration platform.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+**Live site**: [brale.mintlify.app](https://brale.mintlify.app)
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+## What's in this repo
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+| Directory | Contents |
+|-----------|----------|
+| `api-reference/` | API introduction and auto-generated endpoint pages (from OpenAPI) |
+| `guides/` | Step-by-step workflows: onramps, offramps, swaps, payouts, tokenization |
+| `key-concepts/` | Core objects: accounts, addresses, transfers, automations, FIs |
+| `overview/` | Quick start, sandbox/testnet setup |
+| `coverage/` | Supported transfer types, value types, and chains |
+| `documentation/` | Platform overview, API design, Data API |
+| `scripts/` | Verification scripts (testnet, mainnet-light, static checks) |
+| `docs/` | Internal verification reports and coverage tracking |
+| `artifacts/` | OpenAPI snapshots and test run logs |
 
-## Development
+## Local development
 
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
+Requires Node.js v22 (LTS). If you use `nvm`:
 
+```bash
+nvm use 22
 ```
-npm i -g mint
+
+Install the Mintlify CLI and start the dev server:
+
+```bash
+npm i -g mintlify
+mintlify dev
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+Preview at `http://localhost:3000` (or 3001 if 3000 is in use).
 
+## API reference
+
+Endpoint pages are auto-generated from the production OpenAPI spec at `https://api.brale.xyz/openapi`. The spec is referenced in `docs.json`:
+
+```json
+"openapi": "https://api.brale.xyz/openapi"
 ```
-mint dev
+
+Each endpoint page in `api-reference/brale/` is a thin MDX file with an `openapi:` frontmatter directive that Mintlify expands into a full interactive playground.
+
+## Verification
+
+This repo includes scripts to verify documentation accuracy against the live APIs:
+
+```bash
+# Static docs checks (semantic contract, JSON validity, link integrity)
+bash scripts/docs-verify.sh
+
+# Testnet endpoint verification (requires BRALE_CLIENT_ID/SECRET)
+bash scripts/guides-verify-testnet.sh
+
+# Mainnet read-only verification (requires mainnet credentials)
+BRALE_ENV=mainnet MAINNET_CONFIRM=true \
+  BRALE_CLIENT_ID=xxx BRALE_CLIENT_SECRET=yyy \
+  bash scripts/verify-mainnet-light.sh
 ```
 
-View your local preview at `http://localhost:3000`.
+Results are logged to `artifacts/` and summarized in `docs/_verification.md`.
 
-## Publishing changes
+## Key conventions
 
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
+- **Semantic contract**: `value_type` and `transfer_type` are sacred Brale primitives. Always snake_case, never renamed or re-cased.
+- **Accept header**: Do NOT send `Accept: application/json` to `api.brale.xyz` — it causes HTTP 500. Omit the header or use `Accept: */*`.
+- **Environment**: The base URL is the same for testnet and mainnet. Your credentials determine which environment you access.
+- **Idempotency**: All POST and PATCH requests require an `Idempotency-Key` header.
 
-## Need help?
+## Deploying
 
-### Troubleshooting
+Pushes to `main` auto-deploy to the live Mintlify site via the Mintlify GitHub app.
 
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
+## License
 
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+[MIT](LICENSE)
