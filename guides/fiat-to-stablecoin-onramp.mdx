@@ -4,28 +4,57 @@ title: "Fiat to Stablecoin (Onramp)"
 
 <p className="intro-subheading">
 Brale makes it easy for you and your customers to convert USD into stablecoins via wire transfer or ACH.
-
 </p>
+
+<Warning>
+**Fiat rails (wire, ACH) require mainnet.** The wire and ACH flows in this guide cannot be fully executed on testnet because they require real bank infrastructure. You can validate the automation creation flow and API shape on testnet, but actual fiat deposits require mainnet credentials and a funded bank account.
+</Warning>
 
 There are two ways to onramp to stablecoins through the Brale API:
 
-- Submit a [Transfer](/key-concepts/transfers) request with a source value_type of `wire`, or `ach_debit`.
-- Create an [Automation](/key-concepts/automations), which automatically mints stablecoins to a pre-configured destination wallet when funds are received (Automatic Onramp)
+- Submit a [Transfer](/key-concepts/transfers) request with a source `transfer_type` of `wire` or `ach_debit`.
+- Create an [Automation](/key-concepts/automations), which automatically mints stablecoins to a pre-configured destination wallet when funds are received (Automatic Onramp).
 
 Businesses can also onramp directly via the Brale Dashboard, and individuals can onramp through [Brale.io](https://brale.io/).
 
+## Prerequisites
+
+- Bearer token ([How to authenticate](/key-concepts/authentication))
+- Your `account_id` ([How to get your account_id](/guides/how-to/get-your-account-id))
+- An internal (custodial) `address_id` for the stablecoin destination ([How to get address_ids](/guides/how-to/get-your-address-ids))
+- **For ACH debit**: A Plaid-linked address ([Addresses — Plaid integration](/key-concepts/addresses))
+
 ## Fiat to Stablecoin via Wire
 
-Here is an example of onramping to your own stablecoin (YSBC) via wire transfer by calling the Transfers endpoint with the source `transfer_type` of `wire`.
+**POST** `https://api.brale.xyz/accounts/{account_id}/transfers`
 
-**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+```bash
+curl --request POST \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/transfers" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header "Content-Type: application/json" \
+  --header "Idempotency-Key: $(uuidgen)" \
+  --data '{
+    "amount": {
+      "value": "100",
+      "currency": "USD"
+    },
+    "source": {
+      "value_type": "USD",
+      "transfer_type": "wire"
+    },
+    "destination": {
+      "address_id": "'${ADDRESS_ID}'",
+      "value_type": "SBC",
+      "transfer_type": "solana"
+    }
+  }'
+```
 
-```json Request
+```json title="Response (201)"
 {
-  "amount": {
-    "value": "100",
-    "currency": "USD"
-  },
+  "id": "2xNL6PAF0cbcQHyjMQJ2RKRfbD9",
+  "status": "pending",
   "source": {
     "value_type": "USD",
     "transfer_type": "wire"
@@ -34,163 +63,140 @@ Here is an example of onramping to your own stablecoin (YSBC) via wire transfer 
     "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
     "value_type": "SBC",
     "transfer_type": "solana"
-  }
-}
-```
-
-```json Response
-{
-  "id": "transfer_123",
-  "status": "pending",
+  },
   "amount": {
     "value": "100",
     "currency": "USD"
   },
-  "source": {
-    "transfer_type": "wire",
-    "value_type": "USD"
-  },
-  "destination": {
-    "transfer_type": "polygon",
-    "value_type": "SBC",
-    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4"
-  },
   "wire_instructions": {
-    // ...Brale bank details
-  }
+    "bank_name": "...",
+    "routing_number": "...",
+    "account_number": "...",
+    "beneficiary_name": "..."
+  },
+  "created_at": "2025-05-20T20:36:48.147281Z",
+  "updated_at": "2025-05-20T20:36:48.147281Z",
+  "note": null
 }
 ```
 
-Initially, the status of the transfer will be `pending`. Once Brale receives the funds at the bank account provided in `source_deposit_instructions` the stablecoins will immediately be minted to the destination wallet.
+The transfer starts as `pending`. Once Brale receives the wire deposit, stablecoins are minted to the destination address and the transfer transitions to `complete`.
 
 ## Fiat to Stablecoin via ACH Debit
 
-You can initiate ACH debits (same day or standard) from Plaid-linked addresses. See [Addresses](https://docs.brale.xyz/key-concepts/addresses) for the full flow of linking Plaid accounts as addresses you can pull from.
+Initiate ACH debits from Plaid-linked addresses. See [Addresses](/key-concepts/addresses) for the Plaid linking flow.
 
-**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+**POST** `https://api.brale.xyz/accounts/{account_id}/transfers`
 
-```json Request
+```json title="Request"
 {
   "amount": {
     "value": "100",
     "currency": "USD"
   },
   "source": {
-    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
+    "address_id": "${PLAID_LINKED_ADDRESS_ID}",
     "value_type": "USD",
     "transfer_type": "ach_debit"
   },
   "destination": {
-    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
+    "address_id": "${INTERNAL_ADDRESS_ID}",
     "value_type": "SBC",
-    "transfer_type": "canton"
-  }
-}
-```
-
-```json Response
-{
-  "id": "transfer_123",
-  "status": "pending",
-  "amount": {
-    "value": "100",
-    "currency": "USD"
-  },
-  "source": {
-    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
-    "value_type": "USD"
-    "transfer_type": "ach_debit",
-  },
-  "destination": {
-    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4"
-    "value_type": "SBC"
-    "transfer_type": "canton"
+    "transfer_type": "solana"
   }
 }
 ```
 
 ## Fetching Transfers
 
-Query a transfer that has been created.
+**GET** `https://api.brale.xyz/accounts/{account_id}/transfers/{transfer_id}`
 
-**GET** `https://api.brale.xyz/accounts/account_id/transfers/:id`
-
-```json Response
-{
-  "status": "pending",
-  "amount": {
-    "value": "1",
-    "currency": "USD"
-  },
-  "created_at": "2025-02-05T19:39:14.316Z",
-  "updated_at": "2025-02-05T19:39:14.316Z",
-  "source": {
-    "value_type": "usd",
-    "transfer_type": "wire"
-  },
-  "destination": {
-    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
-    "value_type": "SBC",
-    "transfer_type": "polygon"
-  }
-}
+```bash
+curl --request GET \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/transfers/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
 
 ## Fiat to Stablecoin Automation (Automatic Onramp)
 
-<div className="mt-8">
-Automations provide a unique account number and routing number that accepts wire transfers and ACH deposits, and automatically mints stablecoins to a pre-defined wallet address. Businesses can use automations to direct unique pre-funding coordinates to their customers, which mint stablecoins in customers' wallets.
+Automations provide a unique account number and routing number that accepts wire transfers and ACH deposits, and automatically mints stablecoins to a pre-defined wallet address.
 
-</div>
+**POST** `https://api.brale.xyz/accounts/{account_id}/automations`
 
-Here is an example of onramping to your own stablecoin (SBC) via wire transfer by creating a fiat-to-stablecoin automation.
-
-**POST** `https://api.brale.xyz/accounts/account_id/automations`
-
-```json Request
-{
-  "name": "XYZ Onramp",
-  "source": {
-    "value_type": "USD"
-  },
-  "destination": {
-    "address_id": "2MhCCIHulVdXrHiEuQDJvnKbSkl",
-    "value_type": "SBC",
-    "transfer_type": "Solana"
-  }
-}
+```bash
+curl --request POST \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/automations" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header "Content-Type: application/json" \
+  --header "Idempotency-Key: $(uuidgen)" \
+  --data '{
+    "name": "XYZ Onramp",
+    "source": {
+      "transfer_type": null,
+      "value_type": "USD"
+    },
+    "destination": {
+      "address_id": "'${ADDRESS_ID}'",
+      "value_type": "SBC",
+      "transfer_type": "solana"
+    }
+  }'
 ```
 
-Automations are opened in a pending state and automatically transition into processing. Once virtual accounts are created and the automation is ready to use, it will transition to a completed status.
+<Note>
+The source `transfer_type` is `null` because the automation accepts funds via any supported fiat rail (wire or ACH). The rail is determined by how the depositor sends funds, not by the API caller.
+</Note>
 
-When an automation becomes active, the source.funding_instructions object is populated with the virtual account’s bank details (routing number, account number, beneficiary name, etc.). These are the coordinates you share with your customer to fund the automation.
+When an automation becomes `active`, the `source.funding_instructions` object is populated with virtual bank account details:
 
 **GET** `https://api.brale.xyz/accounts/{account_id}/automations/{automation_id}`
 
-```json Response
+```json title="Response (200)"
 {
-  "id": "35kVg1llbsOBYvx9XKr9eOtsD9z",
-  "name": "Customer XYZ Automation",
+  "id": "3670hdMDFjH6CzQrOoYWQGPssrH",
+  "name": "bpm-test",
   "status": "active",
   "source": {
     "transfer_type": null,
     "value_type": "USD",
     "funding_instructions": {
-      "bank_address": "123 Example St, Example City, NY 10001",
-      "beneficiary_address": "25 Main Ave, Suite 100, Example City, IA 50000",
-      "beneficiary_name": "Company ABC",
-      "routing_number": "000111222",
-      "account_number": "000123456789",
-      "bank_name": "Example Bank",
-      "memo": null
+      "bank_address": "8700 Perry Highway Pittsburgh, PA 15237",
+      "beneficiary_address": "1301 Locust St Suite C Des Moines, IA 50309",
+      "beneficiary_name": "Brale Inc.",
+      "account_number": "105323102659",
+      "routing_number": "043087080",
+      "bank_name": "SSB Bank"
     }
   },
   "destination": {
     "transfer_type": "solana",
-    "address_id": "35LWXNTO2jem13nXCLyciFdi162",
+    "address_id": "2s55QPf0rp1sSxJToQZxFVhMRy7",
     "value_type": "SBC"
   },
-  "updated_at": "2025-11-20T15:56:05.017508Z",
-  "created_at": "2025-11-20T15:56:03.531196Z"
+  "updated_at": "2025-11-28T15:07:03.299166Z",
+  "created_at": "2025-11-28T15:07:02.460192Z"
 }
+```
+
+## Verification
+
+The following can be verified on testnet:
+
+| Step | Testnet? | Notes |
+|------|----------|-------|
+| Create automation | Yes | Automation is created and transitions to `active` |
+| Read `funding_instructions` | Yes | Virtual bank details are populated |
+| List/get automations | Yes | CRUD operations work |
+| Wire deposit → mint | **No (mainnet only)** | Requires real wire to virtual account |
+| ACH debit → mint | **No (mainnet only)** | Requires Plaid + real bank account |
+
+```bash
+# Testnet: List existing automations — expect HTTP 200
+curl -s -w "\nHTTP: %{http_code}" \
+  "https://api.brale.xyz/accounts/${ACCOUNT_ID}/automations" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+
+# Testnet: Get a specific automation with funding_instructions
+curl -s "https://api.brale.xyz/accounts/${ACCOUNT_ID}/automations/${AUTOMATION_ID}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
 ```

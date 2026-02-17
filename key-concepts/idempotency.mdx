@@ -14,12 +14,27 @@ Idempotency-Key: 123e4567-e89b-12d3-a456-426614174000
 
 ## When is it required?
 
-| Endpoint type                         | Idempotency-Key header |
-| ------------------------------------- | ---------------------- |
-| `POST /…` (create)                    | **Required**           |
-| `GET /…`, `PUT/PATCH /…`, `DELETE /…` | **Do NOT include**     |
+| Endpoint type        | Idempotency-Key header |
+| -------------------- | ---------------------- |
+| `POST /…` (create)   | **Required**           |
+| `PATCH /…` (update)  | **Required**           |
+| `GET /…`, `DELETE /…` | Not required          |
 
-If the header is missing on a POST request, Brale returns `400 Bad Request`.
+If the header is missing on a POST or PATCH request, Brale returns `400 Bad Request`:
+
+```json
+{
+  "errors": [{
+    "code": "BadRequest",
+    "status": "400",
+    "detail": "No idempotency key found. You need to set the `Idempotency-Key` header for all POST requests: 'Idempotency-Key: KEY'"
+  }]
+}
+```
+
+<Note>
+The error message mentions "POST requests" but the `Idempotency-Key` header is also required on `PATCH` endpoints (e.g., updating an address).
+</Note>
 
 ## Example
 
@@ -31,18 +46,18 @@ curl --request POST \
   --header "Idempotency-Key: $(uuidgen)" \
   --data '{
     "amount": {"value": "10", "currency": "USD"},
-    "source": {"value_type": "usd", "transfer_type": "wire"},
+    "source": {"value_type": "USD", "transfer_type": "wire"},
     "destination": {
       "address_id": "'"${ADDRESS_ID}"'",
-      "value_type": "sbc",
+      "value_type": "SBC",
       "transfer_type": "base"
     }
   }'
 ```
 
-:::tip
+<Tip>
 Most HTTP clients let you generate a UUID at call time or set a default header.
-:::
+</Tip>
 
 ## Request Responses
 

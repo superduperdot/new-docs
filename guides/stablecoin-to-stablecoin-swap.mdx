@@ -7,13 +7,73 @@ title: 'Stablecoin to Stablecoin (Swap)'
   Supported Stablecoins and Blockchains for the full list.
 </p>
 
+## Prerequisites
+
+- Bearer token ([How to authenticate](/key-concepts/authentication))
+- Your `account_id` ([How to get your account_id](/guides/how-to/get-your-account-id))
+- An internal (custodial) `address_id` with a non-zero balance ([How to get address_ids](/guides/how-to/get-your-address-ids))
+
 ## Swap Your Stablecoin Cross Chain
 
 Stablecoins are issued natively on each chain and can be swapped 1:1 between chains at any time. Stablecoins are burned on the source chain, and minted on the destination chain.
 
-## Swap from Solana to Base
+### Swap from Solana to Base
 
-**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+**POST** `https://api.brale.xyz/accounts/{account_id}/transfers`
+
+```bash
+curl --request POST \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/transfers" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header "Content-Type: application/json" \
+  --header "Idempotency-Key: $(uuidgen)" \
+  --data '{
+    "amount": {
+      "value": "100",
+      "currency": "USD"
+    },
+    "source": {
+      "address_id": "'${SOURCE_ADDRESS_ID}'",
+      "value_type": "SBC",
+      "transfer_type": "solana"
+    },
+    "destination": {
+      "address_id": "'${DEST_ADDRESS_ID}'",
+      "value_type": "SBC",
+      "transfer_type": "base"
+    }
+  }'
+```
+
+```json title="Response (201)"
+{
+  "id": "2xNL6PAF0cbcQHyjMQJ2RKRfbD9",
+  "status": "pending",
+  "source": {
+    "address_id": "2s55QPf0rp1sSxJToQZxFVhMRy7",
+    "value_type": "SBC",
+    "transfer_type": "solana"
+  },
+  "destination": {
+    "address_id": "2s55O6n4oPThB79KsN2ZIfvCHDt",
+    "value_type": "SBC",
+    "transfer_type": "base"
+  },
+  "amount": {
+    "value": "100",
+    "currency": "USD"
+  },
+  "created_at": "2025-05-20T20:36:48.147281Z",
+  "updated_at": "2025-05-20T20:36:48.147281Z",
+  "note": null
+}
+```
+
+## Swap between Your Stablecoin and USDC
+
+Swap between Brale-issued stablecoins, USDC, and Paxos-issued stablecoins 1:1 without slippage. Both source and destination can use the same `address_id` if they share the same chain.
+
+**POST** `https://api.brale.xyz/accounts/{account_id}/transfers`
 
 ```json title="Request"
 {
@@ -22,39 +82,40 @@ Stablecoins are issued natively on each chain and can be swapped 1:1 between cha
     "currency": "USD"
   },
   "source": {
-    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
-    "value_type": "YSBC",
+    "address_id": "${SOURCE_ADDRESS_ID}",
+    "value_type": "USDC",
     "transfer_type": "solana"
   },
   "destination": {
-    "address_id": "2VcUIjvaXjMUVAWLT8R9LzEUDed",
-    "value_type": "YSBC",
-    "transfer_type": "base"
+    "address_id": "${DEST_ADDRESS_ID}",
+    "value_type": "SBC",
+    "transfer_type": "solana"
   }
 }
 ```
 
-## Swap between Your Stablecoin and USDC
+## Verification
 
-Swap between Brale-issued stablecoins, USDC, and Paxos-issued stablecoins 1:1 without slippage.
+```bash
+# Check balance before swap
+curl -s "https://api.brale.xyz/accounts/${ACCOUNT_ID}/addresses/${ADDRESS_ID}/balance?transfer_type=solana&value_type=SBC" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
 
-**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+# Create cross-chain swap — expect HTTP 201
+curl -s -w "\nHTTP: %{http_code}" --request POST \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/transfers" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header "Content-Type: application/json" \
+  --header "Idempotency-Key: $(uuidgen)" \
+  --data '{
+    "amount": {"value": "1", "currency": "USD"},
+    "source": {"address_id": "'${SOURCE_ADDRESS_ID}'", "value_type": "SBC", "transfer_type": "solana"},
+    "destination": {"address_id": "'${DEST_ADDRESS_ID}'", "value_type": "SBC", "transfer_type": "base"}
+  }'
 
-```json title="Request"
-{
-  "amount": {
-    "value": "100",
-    "currency": "USD"
-  },
-  "sourceAddress": {
-    "addressId": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
-    "valueType": "USDC",
-    "transferType": "solana"
-  },
-  "destinationAddress": {
-    "addressId": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
-    "valueType": "YSBC",
-    "transferType": "solana"
-  }
-}
+# Poll transfer status — expect status to transition from "pending" to "complete"
+curl -s "https://api.brale.xyz/accounts/${ACCOUNT_ID}/transfers/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
+
+**Expected**: HTTP 201 with transfer object. Status transitions: `pending` → `processing` → `complete`.

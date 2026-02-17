@@ -12,24 +12,94 @@ Brale supports stablecoin issuance and orchestration so you can create, move, an
 
 **ID format**: All resource IDs (account_id, address_id, financial_institution_id, automation_id, etc.) are KSUIDs (26-character alphanumeric, time-sortable).
 
-**Version**: 2.3.1
-
 ## Base URLs
 
 - Auth: `https://auth.brale.xyz`
 - API: `https://api.brale.xyz`
+
+## Content-Type
+
+The API returns `application/json`. Request bodies should use `Content-Type: application/json`.
+
+<Note>
+The OpenAPI spec declares `application/vnd.api+json` but runtime returns `application/json`. Use `application/json` in your integration.
+</Note>
+
+## Accept Header
+
+<Warning>
+**Do not set `Accept: application/json`** in your requests. The Brale API (via its CDN layer) returns HTTP 500 when this header is present. Omit the `Accept` header entirely — the API returns JSON by default.
+</Warning>
+
+If your HTTP client requires an explicit Accept header, use `Accept: */*`.
+
+```bash
+# Correct — no Accept header
+curl --request GET \
+  --url https://api.brale.xyz/accounts \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+
+# Also correct — explicit wildcard
+curl --request GET \
+  --url https://api.brale.xyz/accounts \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header "Accept: */*"
+```
 
 ## Authentication
 
 Use OAuth2 Client Credentials to obtain a bearer token, then include it in the `Authorization` header for all requests.
 
 ```bash
-curl --request POST \\
-  --url https://auth.brale.xyz/oauth2/token \\
-  --header 'Authorization: Basic ${BASE_64_OF(client_id:client_secret)}' \\
-  --header 'Content-Type: application/x-www-form-urlencoded' \\
+curl --request POST \
+  --url https://auth.brale.xyz/oauth2/token \
+  --header 'Authorization: Basic ${BASE_64_OF(client_id:client_secret)}' \
+  --header 'Content-Type: application/x-www-form-urlencoded' \
   --data grant_type=client_credentials
 ```
+
+```json title="Response"
+{
+  "access_token": "ory_at_...",
+  "expires_in": 3599,
+  "scope": "",
+  "token_type": "bearer"
+}
+```
+
+Tokens expire in ~60 minutes. Refresh automatically using `expires_in`.
+
+## Error Responses
+
+The API returns errors in this format:
+
+```json
+{
+  "errors": [
+    {
+      "code": "BadRequest",
+      "status": "400",
+      "title": "An error occurred processing your request.",
+      "source": null,
+      "detail": "No idempotency key found. You need to set the `Idempotency-Key` header for all POST requests: 'Idempotency-Key: KEY'"
+    }
+  ]
+}
+```
+
+Common error codes:
+
+| HTTP | `code` | Meaning |
+|------|--------|---------|
+| 400 | `BadRequest` | Missing required header or malformed request |
+| 401 | `Unauthorized` | Invalid or expired bearer token |
+| 403 | `Forbidden` | Valid token but insufficient scopes |
+| 404 | `NotFound` | Resource does not exist |
+| 422 | `Unprocessable Entity` | Validation failed — `source.pointer` indicates which field |
+
+<Note>
+Auth errors from `auth.brale.xyz` use the standard OAuth2 error format (`{"error": "...", "error_description": "..."}`) per RFC 6749, not the format above.
+</Note>
 
 ## Next steps
 

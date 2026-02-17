@@ -21,7 +21,7 @@ Each transfer requires both a source and a destination, which can be:
 Each source and destination includes:
 
 - `value_type`: The currency being transferred (USD, USDC, USDT, MXN, etc.)
-- `transfer_type`: The payment rail used (Wire, ACH, Polygon, Solana, SPEI, etc.)
+- `transfer_type`: The payment rail or chain used (`wire`, `ach_credit`, `ach_debit`, `polygon`, `solana`, etc.)
 
 ## Required Fields
 
@@ -54,7 +54,27 @@ Each source and destination includes:
 
 Every request is scoped to an account, so the path always starts with:
 
-**POST** `https://api.brale.xyz/accounts/{account_id}/transfers  // The ID of your or your customer's account`
+**POST** `https://api.brale.xyz/accounts/{account_id}/transfers`
+
+## Transfer Response Shape
+
+Transfer responses include these fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | KSUID for this transfer |
+| `status` | string | `pending`, `processing`, `complete`, or `canceled` |
+| `source` | object or null | Origin of funds. **Null for mint transfers** (Brale is the source). |
+| `destination` | object | Where funds are sent. Includes `address_id`, `value_type`, `transfer_type`, and `transaction_id` (on-chain tx hash, when available). |
+| `amount` | object | `{ "value": "10.00", "currency": "USD" }` |
+| `created_at` | string | ISO 8601 timestamp |
+| `updated_at` | string | ISO 8601 timestamp |
+| `note` | string or null | Optional note |
+| `wire_instructions` | object or null | Present only on wire-funded transfers |
+
+<Note>
+For mint transfers (tokenization), `source` is `null` because Brale is the originator. This is expected — do not treat it as an error.
+</Note>
 
 ## USD to Stablecoin (Wire Transfer)
 
@@ -70,10 +90,10 @@ curl --request POST \
   --header "Idempotency-Key: $(uuidgen)" \          # generate a fresh key per logical transfer; reuse on retries of the same transfer
   --data '{
     "amount":    { "value": "10", "currency": "USD" },
-    "source":    { "value_type": "usd", "transfer_type": "wire" },
+    "source":    { "value_type": "USD", "transfer_type": "wire" },
     "destination": {
       "address_id": "'"${ADDRESS_ID}"'",
-      "value_type": "sbc",
+      "value_type": "SBC",
       "transfer_type": "base"
     }
   }'
@@ -109,7 +129,7 @@ When initiating a fiat to stablecoin transfer via wire, we will return a set of 
 
 ## USD to Stablecoin (ACH Debit)
 
-Onramp to your stablecoin by debiting a Plaid connected address.
+Onramp to your stablecoin by debiting a Plaid-linked bank address.
 
 **POST** `https://api.brale.xyz/accounts/account_id/transfers`
 
@@ -120,21 +140,43 @@ Onramp to your stablecoin by debiting a Plaid connected address.
     "currency": "USD"
   },
   "source": {
-    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",  // address_id is the primitive, even for onchain sources
+    "address_id": "34yGFQf7tP1HJCPAWNGaN4rh4nX",
+    "value_type": "USD",
+    "transfer_type": "ach_debit"
+  },
+  "destination": {
+    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
+    "value_type": "SBC",
+    "transfer_type": "polygon"
+  }
+}
+```
+
+## Stablecoin to USD with Branded ACH
+
+Offramp stablecoins to USD using ACH with a `brand` object to control the business name on the receiver's bank statement. Branding is supported for ACH only -- not for wire or RTP.
+
+**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+
+```json title="Request"
+{
+  "amount": {
+    "value": "1",
+    "currency": "USD"
+  },
+  "source": {
+    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
     "value_type": "SBC",
     "transfer_type": "polygon"
   },
   "destination": {
     "address_id": "34yGFQf7tP1HJCPAWNGaN4rh4nX",
     "value_type": "USD",
-    "transfer_type": "wire"
+    "transfer_type": "ach_credit"
   },
   "brand": { "account_id": "34lCJZ2bxbPAzB3ou67Md01veUo" }
 }
 ```
-
-Optional `branding` object
-You can specify which Account’s name appears on the receiver’s bank statement line items for ACH only. It is not supported for wire or RTP.
 
 ## Stablecoin to USD (Wire Offramp or Payout)
 
@@ -151,7 +193,7 @@ Offramp your stablecoin to USD via wire transfer.
   "source": {
     "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
     "value_type": "SBC",
-    "transfer_type": "Polygon"
+    "transfer_type": "polygon"
   },
   "destination": {
     "address_id": "34yGFQf7tP1HJCPAWNGaN4rh4nX",
@@ -201,12 +243,12 @@ Swap USDC to your own stablecoin (YSBC). All stablecoin swaps are 1:1 with no sl
   "source": {
     "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
     "value_type": "USDC",
-    "transfer_type": "Solana"
+    "transfer_type": "solana"
   },
   "destination": {
     "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
     "value_type": "YSBC",
-    "transfer_type": "Solana"
+    "transfer_type": "solana"
   }
 }
 ```
@@ -226,12 +268,12 @@ Process stablecoin payouts to one or many external addresses (EOAs).
   "source": {
     "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
     "value_type": "SBC",
-    "transfer_type": "Solana"
+    "transfer_type": "solana"
   },
   "destination": {
     "address_id": "2xNL6PAF0cbcQHyjMQJ2RKRfbD9",
     "value_type": "SBC",
-    "transfer_type": "Solana"
+    "transfer_type": "solana"
   }
 }
 ```

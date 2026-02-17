@@ -8,34 +8,48 @@ title: 'Stablecoin Payouts'
   to one or many external addresses.
 </p>
 
+## Prerequisites
+
+- Bearer token ([How to authenticate](/key-concepts/authentication))
+- Your `account_id` ([How to get your account_id](/guides/how-to/get-your-account-id))
+- An internal (custodial) `address_id` with a non-zero balance ([How to get address_ids](/guides/how-to/get-your-address-ids))
+- An external `address_id` for the recipient ([How to add an external destination](/guides/how-to/add-external-destination))
+
 ## USDC Payout
 
-**POST** `https://api.brale.xyz/accounts/account_id/transfer`
+Send USDC from your custodial address to an external wallet.
 
-```json title="Request"
-{
-  "amount": {
-    "value": "100",
-    "currency": "USD"
-  },
-  "source": {
-    "addressId": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
-    "valueType": "USDC",
-    "transferType": "solana"
-  },
-  "destination": {
-    "addressId": "2VcUImV6vUAo1v0cspsjD4TsmMQ",
-    "valueType": "USDC",
-    "transferType": "solana"
-  }
-}
+**POST** `https://api.brale.xyz/accounts/{account_id}/transfers`
+
+```bash
+curl --request POST \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/transfers" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header "Content-Type: application/json" \
+  --header "Idempotency-Key: $(uuidgen)" \
+  --data '{
+    "amount": {
+      "value": "100",
+      "currency": "USD"
+    },
+    "source": {
+      "address_id": "'${INTERNAL_ADDRESS_ID}'",
+      "value_type": "USDC",
+      "transfer_type": "solana"
+    },
+    "destination": {
+      "address_id": "'${EXTERNAL_ADDRESS_ID}'",
+      "value_type": "USDC",
+      "transfer_type": "solana"
+    }
+  }'
 ```
 
 ## Payouts from your Stablecoin
 
-A common workflow is to hold custodial balances in the form of your created stablecoin, but to process payouts in another stablecoin, like USDC. Here is an example of paying out of your stablecoin balance to USDC on Solana.
+A common workflow is to hold custodial balances in your own stablecoin and process payouts in another stablecoin like USDC. This example pays out of your stablecoin balance to USDC on Solana:
 
-**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+**POST** `https://api.brale.xyz/accounts/{account_id}/transfers`
 
 ```json title="Request"
 {
@@ -44,14 +58,36 @@ A common workflow is to hold custodial balances in the form of your created stab
     "currency": "USD"
   },
   "source": {
-    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
-    "value_type": "YSBC",
+    "address_id": "${INTERNAL_ADDRESS_ID}",
+    "value_type": "SBC",
     "transfer_type": "solana"
   },
   "destination": {
-    "address_id": "2VcUImV6vUAo1v0cspsjD4TsmMQ",
+    "address_id": "${EXTERNAL_ADDRESS_ID}",
     "value_type": "USDC",
     "transfer_type": "solana"
   }
 }
 ```
+
+## Verification
+
+```bash
+# Create payout — expect HTTP 201
+curl -s -w "\nHTTP: %{http_code}" --request POST \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/transfers" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header "Content-Type: application/json" \
+  --header "Idempotency-Key: $(uuidgen)" \
+  --data '{
+    "amount": {"value": "1", "currency": "USD"},
+    "source": {"address_id": "'${INTERNAL_ADDRESS_ID}'", "value_type": "SBC", "transfer_type": "solana"},
+    "destination": {"address_id": "'${EXTERNAL_ADDRESS_ID}'", "value_type": "SBC", "transfer_type": "solana"}
+  }'
+
+# Poll transfer status
+curl -s "https://api.brale.xyz/accounts/${ACCOUNT_ID}/transfers/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+**Expected**: HTTP 201 with transfer object. Destination `transaction_id` populated once on-chain confirmation completes.

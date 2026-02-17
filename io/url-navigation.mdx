@@ -8,10 +8,14 @@ title: 'Navigate with Query Parameters'
 </p>
 
 - Query parameters available:
-  - `transfer_type`: This is the stablecoin you wish to fund and transfer. This value can
-    be any of the options in the `Stablecoin` dropdown.
-  - `value_type`: This is the chain you want to execute the transfer on. This
-    value can be any of the options in the `Chain` dropdown.
+  - `transfer_type`: The stablecoin you wish to fund and transfer (e.g., `usdglo`, `sbc`). Maps to the `Stablecoin` dropdown in the IO UI.
+  - `value_type`: The chain you want to execute the transfer on (e.g., `polygon`, `solana`). Maps to the `Chain` dropdown in the IO UI.
+
+<Warning>
+**IO inverts the meanings of `value_type` and `transfer_type` compared to the Brale API.**
+
+In the **API**, `value_type` = the asset/token (WHAT is moving) and `transfer_type` = the rail/chain (HOW it moves). In **IO URLs**, these meanings are swapped. This is an IO-specific convention — do not apply IO naming when integrating with `api.brale.xyz`.
+</Warning>
 
 This means you can share a link to a specific transfer configuration with your friends, so
 they easily start a transfer.

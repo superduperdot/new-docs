@@ -14,12 +14,12 @@ Once issued, stablecoins are made available via the API for you and anyone with 
 
 ## Why create your own stablecoin
 
-Issuance allows businesses to benefit from the treasury economics of a stablecoin and provides an additional degree of control not available with third-party stablecoins:
+Issuance allows businesses to benefit from the treasury economics of a stablecoin and provides additional control not available with third-party stablecoins:
 
 - **Treasury revenue**: Earn treasury revenue on funds at rest. This allows fintechs, emerging ecosystems, and app chains to monetize.
 - **Free on and off ramps**: Once issued, your stablecoin is available to your customers to acquire via USD or USDC with $0 fees.
 - **Branded**: Create branded, cohesive product experiences leveraging the trust and familiarity of your brand.
-- **Issue natively on emerging blockchains**: Issue a native-fiat backed stablecoin on your L1 / L2 / Appchain.
+- **Issue natively on emerging blockchains**: Issue a native fiat-backed stablecoin on your L1 / L2 / Appchain.
 
 ## How to create a stablecoin
 
@@ -47,36 +47,59 @@ Issue natively on 14+ blockchains in less than 10 minutes. Below is a live walkt
 
 Brale supports U.S. Dollar and Mexican Peso stablecoins, with additional currencies coming soon. You can also issue stablecoins managed by your own reserves.
 
-Supported currencies:
-
 - U.S. Dollar
 - Mexican Peso
 
-To request additional currencies, please reach out to our team at support@brale.xyz.
+To request additional currencies, reach out to support@brale.xyz.
 
 ## Cross Chain Swaps
 
-Stablecoins are issued natively on each chain and can be swapped 1:1 between chains at any time. Stablecoins are burned on the source chain, and minted on the destination chain. Brale does not use any wrapping or locking mechanism - all stablecoins are issued natively and enforce natural supply.
+Stablecoins are issued natively on each chain and can be swapped 1:1 between chains at any time. Stablecoins are burned on the source chain and minted on the destination chain. Brale does not use wrapping or locking — all stablecoins are issued natively and enforce natural supply.
 
 ### Swap from Solana to Base
 
-**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+**POST** `https://api.brale.xyz/accounts/{account_id}/transfers`
 
-```json title="Request"
-{
-  "amount": {
-    "value": "100",
-    "currency": "USD"
-  },
-  "source": {
-    "address_id": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
-    "value_type": "SBC",
-    "transfer_type": "solana"
-  },
-  "destination": {
-    "address_id": "b2c3d4e5-6789-01ab-cdef-2345678901bc",
-    "value_type": "SBC",
-    "transfer_type": "base"
-  }
-}
+```bash
+curl --request POST \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/transfers" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header "Content-Type: application/json" \
+  --header "Idempotency-Key: $(uuidgen)" \
+  --data '{
+    "amount": {
+      "value": "100",
+      "currency": "USD"
+    },
+    "source": {
+      "address_id": "'${SOURCE_ADDRESS_ID}'",
+      "value_type": "SBC",
+      "transfer_type": "solana"
+    },
+    "destination": {
+      "address_id": "'${DEST_ADDRESS_ID}'",
+      "value_type": "SBC",
+      "transfer_type": "base"
+    }
+  }'
 ```
+
+<Note>
+Stablecoin issuance is a **dashboard-only flow**. The cross-chain swap shown above uses the Transfers API and requires an existing stablecoin with funded custodial balances. On testnet, use testnet chain names (e.g., `solana_devnet`, `base_sepolia`).
+</Note>
+
+## Verification
+
+```bash
+# List accounts — confirm your stablecoin's account exists
+curl -s -w "\nHTTP: %{http_code}" \
+  "https://api.brale.xyz/accounts" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+
+# List addresses — confirm custodial wallets for your stablecoin
+curl -s -w "\nHTTP: %{http_code}" \
+  "https://api.brale.xyz/accounts/${ACCOUNT_ID}/addresses" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+**Expected**: HTTP 200. Cross-chain swap requires funded custodial balance.

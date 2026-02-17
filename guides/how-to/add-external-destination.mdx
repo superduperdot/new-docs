@@ -7,13 +7,20 @@ description: "Register an external address (onchain or offchain) to use as a tra
 
 Register an external address so you can use it as a transfer source or destination. External addresses can be onchain wallets, offchain bank accounts, or Canton parties.
 
-When you create an external address, Brale returns an `address_id` (KSUID) that binds the destination (wallet, party, or bank account) to its supported `transfer_types`. Use this `address_id` in all subsequent transfers.
+When you create an external address, Brale returns an `address_id` (KSUID) that binds the destination to its supported `transfer_types`. Use this `address_id` in all subsequent transfers.
 
-If the same user has wallets on multiple non-EVM chains (e.g., Solana and Stellar), create separate external addresses and you'll receive distinct `address_id` values for each.
+If the same user has wallets on multiple non-EVM chains (e.g., Solana and Stellar), create separate external addresses — you'll receive distinct `address_id` values for each.
+
+## Prerequisites
+
+- Bearer token ([How to authenticate](/key-concepts/authentication))
+- Your `account_id` ([How to get your account_id](/guides/how-to/get-your-account-id))
 
 ## Endpoint
 
-`POST /accounts/{account_id}/addresses/external`
+**POST** `https://api.brale.xyz/accounts/{account_id}/addresses/external`
+
+**Required headers**: `Authorization`, `Content-Type: application/json`, `Idempotency-Key`
 
 ## Onchain wallets
 
@@ -69,9 +76,15 @@ Each blockchain has its own address format. EVM-compatible chains share addresse
 }
 ```
 
-> **Note:** Canton transfers to external parties require acceptance within 72 hours or they expire. Transfers to parties also custodied by Brale are accepted automatically.
+<Note>
+Canton transfers to external parties require acceptance within 72 hours or they expire. Transfers to parties also custodied by Brale are accepted automatically.
+</Note>
 
 ## Offchain bank account (ACH/Wire/RTP)
+
+<Warning>
+Bank account addresses require **mainnet**. You can create the address on testnet to validate the API shape, but actual fiat transfers require mainnet credentials.
+</Warning>
 
 ```json
 {
@@ -101,7 +114,7 @@ Each blockchain has its own address format. EVM-compatible chains share addresse
 ```bash
 curl --request POST \
   --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/addresses/external" \
-  --header "Authorization: Bearer ${AUTH_TOKEN}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
   --header "Content-Type: application/json" \
   --header "Idempotency-Key: $(uuidgen)" \
   --data '{
@@ -113,18 +126,42 @@ curl --request POST \
 
 ## Example response
 
-```json
+```json title="Response (201)"
 {
-  "id": "2VcUIIsgARwVbEGlIYbhg6fGG57"
+  "id": "39mMGHWv6mu186QBCHuVVSKEpZ8",
+  "name": "Guide Verification Wallet",
+  "status": "active",
+  "type": "external",
+  "address": "DRpbCBMxVnDK7maPM5tGv6MvB3v1sRMC86PZ8okm21hy",
+  "transfer_types": ["solana"],
+  "created": "2026-02-17T02:51:35.449519Z"
 }
 ```
 
-Use this `id` as the `address_id` in transfers.
+Use the `id` as `address_id` in transfers.
 
 ## Notes
 
-- External addresses have `type: external` when fetched via `GET /addresses`.
-- You cannot query balances for external addresses—only internal (custodial) ones.
+- External addresses have `type: "external"` when fetched via `GET /addresses`.
+- You cannot query balances for external addresses — only internal (custodial) ones.
 - Bank accounts can also be linked via [Plaid](/key-concepts/addresses#register-address-exchange-the-public-token) instead of manual entry.
 - You can add `transfer_types` to an existing address via `PATCH /addresses/{address_id}`.
-- See [Transfer Types](/docs/coverage/transfer-types) for all supported chains/rails.
+- See [Transfer Types](/coverage/transfer-types) for all supported chains/rails.
+
+## Verification
+
+```bash
+# Create external address — expect HTTP 201
+curl -s -w "\nHTTP: %{http_code}" --request POST \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/addresses/external" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header "Content-Type: application/json" \
+  --header "Idempotency-Key: $(uuidgen)" \
+  --data '{
+    "name": "Test Wallet",
+    "address": "DRpbCBMxVnDK7maPM5tGv6MvB3v1sRMC86PZ8okm21hy",
+    "transfer_types": ["solana"]
+  }'
+```
+
+**Expected**: HTTP 201 with `id`, `name`, `status: "active"`, `type: "external"`, `transfer_types`, and `created`. Returns 409 if the address already exists.

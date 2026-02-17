@@ -25,9 +25,32 @@ Whether you're a fintech, exchange, or payment platform, Brale provides the infr
 
 ## Stablecoin Market Data (data.brale.xyz)
 
-- Public, read-only API for metadata and price feeds
-- No authentication required
-- Used for: accessing token metadata (e.g. SBC), prices, and definitions
+- Public, read-only API — **no authentication required**
+- CORS enabled for browser and agent use
+- Used for: token metadata, contract addresses, prices, and chain coverage
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /list` | All supported tokens with links to price and data endpoints |
+| `GET /price/{symbol}` | Current price for a stablecoin (e.g. `/price/sbc`) |
+| `GET /data/{symbol}` | Full metadata: contract addresses, chain IDs, decimals, logos |
+| `GET /help` | Self-documenting usage guide |
+| `GET /openapi.yaml` | OpenAPI 3.0 specification |
+
+Supported tokens: `SBC`, `USDC`, `USDGLO`, `CFUSD`. Symbols are case-insensitive.
+
+```bash
+# List all available tokens
+curl https://data.brale.xyz/list
+
+# Get SBC contract addresses across all chains
+curl https://data.brale.xyz/data/sbc
+
+# Get USDC price
+curl https://data.brale.xyz/price/usdc
+```
+
+See the full [Data API Reference](/documentation/data-api) for all endpoints and response shapes.
 
 ## Key Features
 

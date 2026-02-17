@@ -1,0 +1,471 @@
+---
+title: "Additional Endpoints"
+description: "Reference for all production API endpoints not covered in the primary guides. Sourced from the production OpenAPI spec."
+---
+
+This page documents endpoints present in the production OpenAPI spec (`GET https://api.brale.xyz/openapi`) that are not covered in the primary guides. All descriptions and schemas are taken directly from the OpenAPI spec — nothing is invented.
+
+<Note>
+**Do not set `Accept: application/json`** in your requests. The API returns JSON by default. See [API Introduction](/api-reference/brale-introduction#accept-header) for details.
+</Note>
+
+## Accounts
+
+### Get Individual Account
+
+**GET** `/accounts/{account_id}`
+
+Retrieve a single account by ID.
+
+**Scope**: `accounts:read`
+
+```bash
+curl --request GET \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+```json title="Response (200)"
+{
+  "id": "2s55NaiUtTNSIKKGy0iajrRyHq9",
+  "name": "Brale Ecosystem",
+  "status": "complete",
+  "updated": "2026-01-26T20:31:19",
+  "created": "2025-01-24T15:29:15"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string (KSUID) | Account identifier |
+| `name` | string | Account name |
+| `status` | enum | `complete`, `pending`, or `rejected` |
+| `updated` | datetime | Last update timestamp |
+| `created` | datetime | Creation timestamp |
+
+### Create Managed Account
+
+**POST** `/accounts`
+
+Create a managed account (sub-account for your end customers). Requires KYB data.
+
+**Scope**: `accounts:write` | **Idempotency-Key**: Required
+
+```json title="Request body (CreateManagedAccountRequest)"
+{
+  "business_name": "My Customer",
+  "ein": "123456789",
+  "address": {
+    "street_line_1": "100 Example St.",
+    "city": "Springfield",
+    "state": "CA",
+    "zip": "90001"
+  },
+  "phone_number": "515-555-1212",
+  "email": "a@b.com",
+  "website": "https://example.com",
+  "business_controller": {
+    "first_name": "John",
+    "last_name": "Doe",
+    "dob": "YYYY-MM-DD",
+    "ssn": "123-45-6789",
+    "address": { "street_line_1": "...", "city": "...", "state": "XX", "zip": "00000" },
+    "email": "a@b.com",
+    "phone_number": "515-555-1212"
+  },
+  "tos_attestation": {
+    "accepted_at": "2025-01-01T12:00:00Z"
+  }
+}
+```
+
+---
+
+## Addresses
+
+### Get Individual Address
+
+**GET** `/accounts/{account_id}/addresses/{address_id}`
+
+Retrieve a single address by ID.
+
+**Scope**: `addresses:read`
+
+```bash
+curl --request GET \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/addresses/${ADDRESS_ID}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+Returns the same shape as items in the `GET /addresses` list response.
+
+### Update Address
+
+**PATCH** `/accounts/{account_id}/addresses/{address_id}`
+
+Update an external address. Use this to add `transfer_types` or change the name.
+
+**Scope**: `addresses:write` | **Idempotency-Key**: Required
+
+```json title="Request body"
+{
+  "additional_transfer_types": ["polygon", "arbitrum"],
+  "name": "Updated Wallet Name"
+}
+```
+
+Both fields are optional. `additional_transfer_types` adds to the existing list (does not replace).
+
+### Refresh Plaid Link Token (Address-level)
+
+**POST** `/accounts/{account_id}/addresses/{address_id}/update-link-token`
+
+Generate a new Plaid link token for re-authentication of an existing Plaid-linked address.
+
+**Scope**: `financial-institutions:read` | **Idempotency-Key**: Required
+
+```json title="Response (200)"
+{
+  "link_token": "link-sandbox-123456789",
+  "expiration": "2024-01-01T12:00:00Z",
+  "callback_url": "http://localhost:4000/financial_institutions/register_account"
+}
+```
+
+---
+
+## Automations
+
+### Get Individual Automation
+
+**GET** `/accounts/{account_id}/automations/{automation_id}`
+
+Retrieve a single automation by ID, including `funding_instructions` when active.
+
+**Scope**: `automations:read`
+
+```bash
+curl --request GET \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/automations/${AUTOMATION_ID}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+Returns the same shape as items in the `GET /automations` list response, with `source.funding_instructions` populated when `status: "active"`.
+
+---
+
+## Transfers
+
+### Get Individual Transfer
+
+**GET** `/accounts/{account_id}/transfers/{transfer_id}`
+
+Retrieve a single transfer by ID. Use this to poll transfer status.
+
+**Scope**: `transfers:read`
+
+```bash
+curl --request GET \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/transfers/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+```json title="Response (200)"
+{
+  "id": "38zEvvxGJHVL1ezzpekBPbGM5Zv",
+  "status": "complete",
+  "amount": {
+    "value": "1.00",
+    "currency": "USD"
+  },
+  "source": null,
+  "destination": {
+    "address_id": "38IsL5egB8GzNsw0dOIv1IzNvre",
+    "value_type": "SBC",
+    "transfer_type": "canton_testnet",
+    "transaction_id": "..."
+  },
+  "created_at": "2026-01-15T20:30:00Z",
+  "updated_at": "2026-01-15T20:31:00Z",
+  "note": null
+}
+```
+
+| Status | Description |
+|--------|-------------|
+| `pending` | Transfer created, awaiting processing |
+| `processing` | Transfer in progress |
+| `complete` | Transfer finished successfully |
+| `canceled` | Transfer was canceled |
+
+### List Transfers — Query Parameters
+
+The `GET /transfers` endpoint supports these query parameters (from OpenAPI):
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `page[size]` | integer (1–100) | Page size |
+| `page[after]` | string | Cursor for forward pagination |
+| `page[before]` | string | Cursor for backward pagination |
+| `transaction_id` | string | Filter by on-chain transaction hash |
+| `automation_id` | string | Filter transfers created by a specific automation |
+
+---
+
+## Financial Institutions
+
+### Get Individual Financial Institution
+
+**GET** `/accounts/{account_id}/financial-institutions/{fi_id}`
+
+Retrieve a single FI by ID.
+
+**Scope**: `financial-institutions:read`
+
+```bash
+curl --request GET \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/financial-institutions/${FI_ID}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+### Get Financial Institution Status
+
+**GET** `/accounts/{account_id}/financial-institutions/{fi_id}/status`
+
+Check whether a FI needs Plaid reauthorization.
+
+**Scope**: `financial-institutions:read`
+
+```json title="Response (200)"
+{
+  "financial_institution_id": "2x2j2GOGcJXBQmQ8kFatyEC8aaq",
+  "needs_update": false,
+  "status": "active",
+  "last_updated": "2024-01-15T10:30:00Z"
+}
+```
+
+### Create External Financial Institution
+
+**POST** `/accounts/{account_id}/financial-institutions/external`
+
+Register an external bank account directly (without Plaid).
+
+**Scope**: `financial-institutions:write` | **Idempotency-Key**: Required
+
+```json title="Request body"
+{
+  "owner": "Jane Doe",
+  "account_number": "123456789",
+  "routing_number": "123456789",
+  "bank_address": {
+    "street_line_1": "100 Example St.",
+    "city": "Springfield",
+    "state": "CA",
+    "zip": "90001"
+  },
+  "beneficiary_address": {
+    "street_line_1": "100 Example St.",
+    "city": "Springfield",
+    "state": "CA",
+    "zip": "90001"
+  },
+  "account_type": "checking",
+  "transfer_types": ["ach_credit", "wire"]
+}
+```
+
+### Create Plaid Link Token (FI-level)
+
+**POST** `/accounts/{account_id}/financial-institutions/plaid/link_token`
+
+Create a Plaid link token for bank authentication.
+
+**Scope**: `financial-institutions:write` | **Idempotency-Key**: Required
+
+```json title="Request body (optional fields)"
+{
+  "legal_name": "John Doe",
+  "email_address": "user@example.com",
+  "phone_number": "+1234567890",
+  "redirect_uri": "https://app.example.com/plaid-oauth"
+}
+```
+
+```json title="Response (200)"
+{
+  "link_token": "link-sandbox-123456789",
+  "expiration": "2024-01-01T12:00:00Z",
+  "callback_url": "http://localhost:4000/financial_institutions/register_account"
+}
+```
+
+### Register FI Account (Plaid)
+
+**POST** `/accounts/{account_id}/financial-institutions/register-account`
+
+Exchange a Plaid public token for a registered financial institution.
+
+**Scope**: `financial-institutions:write` | **Idempotency-Key**: Required
+
+```json title="Request body"
+{
+  "public_token": "public-sandbox-123456789",
+  "customer_webhook_url": "https://customer.com/webhooks/plaid-updates"
+}
+```
+
+```json title="Response (200)"
+{
+  "financial_institution_id": "fi_123456789"
+}
+```
+
+### Refresh FI Link Token
+
+**POST** `/accounts/{account_id}/financial-institutions/{fi_id}/update-link-token`
+
+Generate a new Plaid link token for re-authentication of an existing FI.
+
+**Scope**: `financial-institutions:read` | **Idempotency-Key**: Required
+
+Same response shape as the Create Plaid Link Token endpoint.
+
+---
+
+## Plaid (Address-level)
+
+These endpoints are an alternative Plaid flow that returns an `address_id` instead of a `financial_institution_id`.
+
+### Create Plaid Link Token (Address-level)
+
+**POST** `/accounts/{account_id}/plaid/link_token`
+
+Same as the FI-level Plaid link token, but scoped for address-based registration.
+
+**Scope**: `financial-institutions:write` | **Idempotency-Key**: Required
+
+### Register Account via Plaid (returns address_id)
+
+**POST** `/accounts/{account_id}/plaid/register-account`
+
+Register a bank account via Plaid and receive an `address_id` (not an FI ID).
+
+**Scope**: `financial-institutions:write` | **Idempotency-Key**: Required
+
+```json title="Request body"
+{
+  "public_token": "public-sandbox-123456789",
+  "customer_webhook_url": "https://customer.com/webhooks/plaid-updates",
+  "transfer_types": ["ach_credit", "wire"]
+}
+```
+
+```json title="Response (201)"
+{
+  "address_id": "addr_123456789"
+}
+```
+
+<Note>
+This endpoint requires `transfer_types` in the request body (unlike the FI-level register-account which does not).
+</Note>
+
+---
+
+## Tokenization
+
+These endpoints require the `self_attested_tokens:*` scopes. They are only available for tokenization/self-attested accounts. Standard stablecoin accounts will receive HTTP 403.
+
+### Get Individual Mint
+
+**GET** `/accounts/{account_id}/tokens/mints/{mint_id}`
+
+**Scope**: `self_attested_tokens:read`
+
+```bash
+curl --request GET \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/tokens/mints/${MINT_ID}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+```json title="Response (200)"
+{
+  "id": "mint_123",
+  "amount": "1000",
+  "status": "complete",
+  "destination": {
+    "address_id": "2srdkF6Sm8TWOJpWt1oNlTVes1w",
+    "value_type": "MY_TOKEN",
+    "transfer_type": "base"
+  },
+  "created_at": "2025-01-01T12:00:00Z",
+  "updated_at": "2025-01-01T12:01:00Z"
+}
+```
+
+### Get Individual Burn
+
+**GET** `/accounts/{account_id}/tokens/burns/{burn_id}`
+
+**Scope**: `self_attested_tokens:read`
+
+Same shape as mint, but with `source` instead of `destination`.
+
+### List Tokenization Transfers
+
+**GET** `/accounts/{account_id}/tokens/transfers`
+
+List all tokenization transfers (token-to-token moves between addresses).
+
+**Scope**: `self_attested_tokens:read`
+
+Supports the same pagination parameters as other list endpoints (`page[size]`, `page[after]`, `page[before]`) and filtering by `transaction_id` and `value_type`.
+
+### Create Tokenization Transfer
+
+**POST** `/accounts/{account_id}/tokens/transfers`
+
+Move attested tokens between addresses on the same blockchain.
+
+**Scope**: `self_attested_tokens:transfer` | **Idempotency-Key**: Required
+
+```json title="Request body"
+{
+  "amount": "100",
+  "source": {
+    "address_id": "${SOURCE_ADDRESS_ID}",
+    "value_type": "MY_TOKEN",
+    "transfer_type": "solana"
+  },
+  "destination": {
+    "address_id": "${DEST_ADDRESS_ID}",
+    "value_type": "MY_TOKEN",
+    "transfer_type": "solana"
+  }
+}
+```
+
+### Get Individual Tokenization Transfer
+
+**GET** `/accounts/{account_id}/tokens/transfers/{transfer_id}`
+
+**Scope**: `self_attested_tokens:read`
+
+```json title="Response (200)"
+{
+  "id": "transfer_123",
+  "amount": "100",
+  "status": "complete",
+  "source": {
+    "address": "0x...",
+    "transfer_type": "solana"
+  },
+  "destination": {
+    "address": "0x...",
+    "transfer_type": "solana"
+  },
+  "created_at": "2025-01-01T12:00:00Z",
+  "updated_at": "2025-01-01T12:01:00Z"
+}
+```

@@ -7,89 +7,86 @@ title: 'Stablecoin to Fiat (Offramp)'
   ACH, and RTP.
 </p>
 
-In order to submit a stablecoin-to-fiat transaction, first you need to:
+<Warning>
+**Fiat rails (wire, ACH, RTP) require mainnet.** The offramp flows in this guide cannot be fully executed on testnet because they require real bank infrastructure. You can validate the address creation API shape on testnet, but actual fiat payouts require mainnet credentials and a registered bank account.
+</Warning>
 
-- Create an [Account](/key-concepts/accounts) respresenting your customer
-- Create an [Address](/key-concepts/addresses) which is your customer's bank account where Brale will deposit USD
-- Deposit stablecoins to a Brale custodial address (address with type `internal`)
+## Prerequisites
 
-## Link an Address to your customer's Account
+- Bearer token ([How to authenticate](/key-concepts/authentication))
+- Your `account_id` ([How to get your account_id](/guides/how-to/get-your-account-id))
+- An internal (custodial) `address_id` holding stablecoins
+- An external offchain `address_id` linked to a bank account (created below)
+
+## Step 1: Link an Address to your customer's Account
 
 You can add addresses in two ways:
 
-1. Addresses API
-2. Plaid
+1. **Addresses API** — manually provide bank details
+2. **Plaid** — link via Plaid flow
 
 Here is an example of directly adding an offchain address.
 
-**POST** `https://api.brale.xyz/accounts/account_id/addresses/external`
+**POST** `https://api.brale.xyz/accounts/{account_id}/addresses/external`
 
-```json title="Request"
-{
-  "owner": "Jane Doe",
-  "account_number": "1234567890",
-  "routing_number": "987654321",
-  "name": "Example Bank",
-  "transfer_types": ["ach_credit", "same_day_ach_credit", "rtp_credit"]
-  "beneficiary_address": {
-    "street_line_1": "100 Example St",
-    "street_line_2": "Suite 500",
-    "city": "Springfield",
-    "state": "CA",
-    "zip": "90001"
-  },
-  "bank_address": {
-    "street_line_1": "100 Example St",
-    "street_line_2": "Suite 500",
-    "city": "Springfield",
-    "state": "CA",
-    "zip": "90001"
-  },
-  "account_type": "checking"
-}
+```bash
+curl --request POST \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/addresses/external" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header "Content-Type: application/json" \
+  --header "Idempotency-Key: $(uuidgen)" \
+  --data '{
+    "owner": "Jane Doe",
+    "account_number": "1234567890",
+    "routing_number": "987654321",
+    "name": "Example Bank",
+    "transfer_types": ["ach_credit", "same_day_ach_credit", "rtp_credit"],
+    "beneficiary_address": {
+      "street_line_1": "100 Example St",
+      "street_line_2": "Suite 500",
+      "city": "Springfield",
+      "state": "CA",
+      "zip": "90001"
+    },
+    "bank_address": {
+      "street_line_1": "100 Example St",
+      "street_line_2": "Suite 500",
+      "city": "Springfield",
+      "state": "CA",
+      "zip": "90001"
+    },
+    "account_type": "checking"
+  }'
 ```
 
-```json title="Response"
+```json title="Response (201)"
 {
   "id": "34yxvqP90NfeeYkQGriO6bSfn1K",
   "name": "THE BANK OF TAMPA",
   "owner": "Jane Doe",
   "status": "active",
-  "transfer_types": ["ach_credit", "same_day_ach_credit", "rtp_credit"],
+  "transfer_types": null,
   "created": "2025-11-03T19:57:25.965990Z",
-  "bank_address": {
-    "state": "CA",
-    "zip": "90001",
-    "city": "Springfield",
-    "country": "US",
-    "street_line_1": "100 Example St",
-    "street_line_2": "Suite 500"
-  },
-  "beneficiary_address": {
-    "state": "CA",
-    "zip": "90001",
-    "city": "Springfield",
-    "country": "US",
-    "street_line_1": "100 Example St",
-    "street_line_2": "Suite 500"
-  },
   "account_number": "****7890",
   "needs_update": false,
-  "last_updated": "2025-11-03T19:57:26.801044Z",
   "routingNumber": "063108680",
   "account_type": "checking"
 }
 ```
 
+<Note>
+**Known runtime behavior**: `routingNumber` uses camelCase (inconsistent with the snake_case convention). `transfer_types` may be `null` initially — the available rails are determined asynchronously.
+</Note>
+
 ### RTP Enablement
 
-Offramps via RTP use the `rtp_credit` transfer_type on the destination Address. RTP capability is enabled asynchronously by our banking partner, so a newly created bank Address may initially not show `rtp_credit` even though it is eligible for real-time payments. Only treat an Address as RTP-capable once `"rtp_credit"` appears in its `transfer_types`. See **Key Concepts → Addresses → Create External Address for RTP** for details.
+Offramps via RTP use the `rtp_credit` transfer_type on the destination Address. RTP capability is enabled asynchronously, so a newly created bank Address may initially not show `rtp_credit` even though it is eligible. Only treat an Address as RTP-capable once `"rtp_credit"` appears in its `transfer_types`.
 
-## Stablecoin to USD via Wire
+## Step 2: Submit a Stablecoin to USD Transfer
 
-Once your customer has anAddress and stablecoins are held in a Brale controlled address, you can submit a Transfer request with the destination of the address.
+### Stablecoin to USD via Wire
 
-**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+**POST** `https://api.brale.xyz/accounts/{account_id}/transfers`
 
 ```json title="Request"
 {
@@ -98,16 +95,33 @@ Once your customer has anAddress and stablecoins are held in a Brale controlled 
     "currency": "USD"
   },
   "source": {
-    "address_id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
-    "value_type": "YSBC",
-    "transfer_type": "Solana"
+    "address_id": "${INTERNAL_ADDRESS_ID}",
+    "value_type": "SBC",
+    "transfer_type": "solana"
   },
   "destination": {
-    "address_id": "2AbCdEfGHiJkLmN0pQrStUvWxYz",
+    "address_id": "${BANK_ADDRESS_ID}",
     "value_type": "USD",
     "transfer_type": "wire"
   }
 }
 ```
 
-Brale will burn the stablecoins from the Source Address immediately, and then transfer USD to the destination bank account.
+Brale will burn the stablecoins from the source address immediately, then transfer USD to the destination bank account.
+
+## Verification
+
+| Step | Testnet? | Notes |
+|------|----------|-------|
+| Create offchain address (bank) | Yes | Address is created with bank details |
+| List financial institutions | Yes | FIs are visible |
+| Submit wire offramp | **No (mainnet only)** | Requires real bank account to receive funds |
+| Submit ACH credit offramp | **No (mainnet only)** | Requires real bank account |
+| Submit RTP offramp | **No (mainnet only)** | Requires RTP-enabled bank account |
+
+```bash
+# Testnet: List FIs to verify bank addresses exist — expect HTTP 200
+curl -s -w "\nHTTP: %{http_code}" \
+  "https://api.brale.xyz/accounts/${ACCOUNT_ID}/financial-institutions" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+```

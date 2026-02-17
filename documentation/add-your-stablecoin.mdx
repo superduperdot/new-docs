@@ -1,25 +1,89 @@
 ---
 title: "Add Your Stablecoin"
-description: "Submit your token list to Brale Commons so it’s indexed and priced on data.brale.xyz."
+description: "Submit your token list to Brale Commons so it's indexed and priced on data.brale.xyz."
 ---
 
 # Add Your Stablecoin
 
-Publish your stablecoin metadata via the Brale Commons repo so it can be indexed on `data.brale.xyz` (with pricing) and made searchable programmatically.
+Publish your stablecoin metadata via the Brale Commons repo so it appears in the [Data API](https://data.brale.xyz) with pricing, contract addresses, and programmatic discoverability.
+
+## Requirements
+
+- Must be issued by Brale, **or**
+- Must be supported on Brale exchange
 
 ## How to add your token
 
-1. Open the Commons repo: [Brale-xyz/commons](https://github.com/Brale-xyz/commons/tree/main/Data)  
-2. Add your token list under `Data/` (follow the existing naming and JSON structure in the folder).  
-3. Submit a pull request.  
-4. Once accepted, the token is indexed on `https://data.brale.xyz` with price data and discoverable via programmatic search.
+1. Open the Commons repo: [Brale-xyz/commons/Data](https://github.com/Brale-xyz/commons/tree/main/Data)
+2. Create a JSON file following the [Uniswap Token List](https://tokenlists.org/) specification
+3. Include contract addresses for **all supported networks**
+4. Ensure token metadata is accurate and complete (name, symbol, decimals, logoURI)
+5. Submit a pull request
 
-## Advantages
+Once the PR is accepted, your token automatically appears in the Data API:
 
-- Indexed and priced on `data.brale.xyz` for downstream use.  
-- Programmatic discoverability for integrators.  
-- Central, versioned source via the Commons repo.  
-- Fast updates: ship changes with a PR to `Data/`.
+```bash
+# Your token will be discoverable via
+curl https://data.brale.xyz/list
+
+# And queryable by symbol
+curl https://data.brale.xyz/price/{your_symbol}
+curl https://data.brale.xyz/data/{your_symbol}
+```
+
+## Token list format
+
+Your JSON file should include a `tokens` array with an entry per network deployment:
+
+```json
+{
+  "name": "Your Token List",
+  "logoURI": "ipfs://...",
+  "keywords": ["your-token", "stablecoin"],
+  "issuer": "https://your-site.com",
+  "tokens": [
+    {
+      "chainId": 8453,
+      "address": "0x...",
+      "name": "Your Token",
+      "symbol": "YOUR",
+      "decimals": 18,
+      "logoURI": "ipfs://..."
+    },
+    {
+      "chainId": 137,
+      "address": "0x...",
+      "name": "Your Token",
+      "symbol": "YOUR",
+      "decimals": 18,
+      "logoURI": "ipfs://..."
+    }
+  ]
+}
+```
+
+Common chain IDs: `1` (Ethereum), `137` (Polygon), `8453` (Base), `42161` (Arbitrum), `10` (Optimism), `42220` (Celo), `43114` (Avalanche), `101` (Solana).
+
+## What you get
+
+- **Price endpoint**: `https://data.brale.xyz/price/{symbol}` — returns `$1.00` USD peg
+- **Data endpoint**: `https://data.brale.xyz/data/{symbol}` — returns full metadata with all contract addresses
+- **Listed in** `https://data.brale.xyz/list` — discoverable by integrators and LLM agents
+- **LLM-compatible**: indexed in the [AI plugin manifest](https://data.brale.xyz/.well-known/ai-plugin.json) for ChatGPT and other LLMs
+
+## Currently listed tokens
+
+Check the live list at any time:
+
+```bash
+curl -s https://data.brale.xyz/list | jq '.tokens[].name'
+```
+
+| Symbol | Name |
+|--------|------|
+| `SBC` | Stable Coin |
+| `USDC` | USD Coin |
+| `USDGLO` | Glo Dollar |
+| `CFUSD` | Coinflow USD |
 
 Need help or a template? Reach out to [support@brale.xyz](mailto:support@brale.xyz).
-

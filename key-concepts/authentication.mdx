@@ -11,6 +11,21 @@ title: 'Authentication'
 
 Your ability to authenticate to the API is granted through an API Key associated with an Application. Applications are specific to testnet or mainnet access, and have a specific set of permissions. You can create multiple API applications within the dashboard, each assigned specific API scopes.
 
+## Environment (Testnet vs Mainnet)
+
+The base URL is the **same** for both testnet and mainnet:
+
+| | URL |
+|---|---|
+| Auth | `https://auth.brale.xyz` |
+| API | `https://api.brale.xyz` |
+
+Your **API credentials determine which environment you are operating in** — not the URL. A testnet application's credentials will give you testnet behavior; mainnet credentials give you mainnet behavior.
+
+<Warning title="Common Confusion">
+Account IDs (e.g., `2s55NaiUtTNSIKKGy0iajrRyHq9`) can appear identical across testnet and mainnet. This does **not** mean the environments are shared — it means the same underlying account exists in both. The credentials you authenticate with determine which environment's data and behavior you access. Never assume an account_id implies a specific environment.
+</Warning>
+
 ## Create API Credentials
 
 Create an application on the Settings page in the Dashboard. Brale will make your API key available only once. Please save the key in a secure location.
@@ -33,14 +48,39 @@ curl --request POST \
   --data grant_type=client_credentials
 ```
 
+```json title="Response (200)"
+{
+  "access_token": "ory_at_...",
+  "expires_in": 3599,
+  "scope": "",
+  "token_type": "bearer"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `access_token` | string | Bearer token (prefix: `ory_at_`) |
+| `expires_in` | integer | Seconds until expiry (~3599 = 1 hour) |
+| `scope` | string | Granted scopes (may be empty string) |
+| `token_type` | string | Always `"bearer"` |
+
+If credentials are invalid or missing, the auth endpoint returns a standard OAuth2 error (RFC 6749):
+
+```json title="Error (400)"
+{
+  "error": "invalid_request",
+  "error_description": "Client credentials missing or malformed in both HTTP Authorization header and HTTP POST body."
+}
+```
+
 ## Authenticated Requests
 
-Include the bearer token in the Authorization header of your API requests.
+Include the bearer token in the `Authorization` header of your API requests.
 
 ```shell
 curl --request GET \
-  --url https://api.brale.xyz/tokens \
-  --header 'Authorization: Bearer OiVz67P7emAx0JUJRmYHP4pI-nSlYQn7ivTQE.A-tXeGnuzQBRSjq9QNGQXZ4aRl7Rbm8wY'
+  --url https://api.brale.xyz/accounts \
+  --header 'Authorization: Bearer ${ACCESS_TOKEN}'
 ```
 
 ## Token Expiration

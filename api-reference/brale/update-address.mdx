@@ -1,0 +1,10 @@
+---
+title: 'Update an address'
+description: 'Update an external address — add transfer_types or change the name.'
+openapi: 'PATCH /accounts/{account_id}/addresses/{address_id}'
+---
+Use the playground below to try this endpoint directly, or review the OpenAPI details in the right panel.
+
+<Note>
+Requires the `Idempotency-Key` header. The `additional_transfer_types` field **adds** to the existing list (does not replace).
+</Note>

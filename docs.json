@@ -60,6 +60,12 @@
         "tab": "Tools",
         "groups": [
           {
+            "group": "Data API",
+            "pages": [
+              "documentation/data-api"
+            ]
+          },
+          {
             "group": "Commons",
             "pages": [
               "documentation/commons-stablecoin-format",
@@ -116,10 +122,8 @@
             "pages": [
               "guides/how-to/get-your-account-id",
               "guides/how-to/get-your-address-ids",
-              "guides/how-to/create-a-managed-account",
               "guides/how-to/get-a-balance",
-              "guides/how-to/add-external-destination",
-              "guides/how-to/untitled-page"
+              "guides/how-to/add-external-destination"
             ]
           },
           {
@@ -144,29 +148,76 @@
           {
             "group": "API overview",
             "pages": [
-              "api-reference/brale-introduction"
+              "api-reference/brale-introduction",
+              "api-reference/additional-endpoints"
             ]
           },
           {
-            "group": "Endpoints",
+            "group": "Accounts",
             "pages": [
               "api-reference/brale/list-accounts",
               "api-reference/brale/create-account",
-              "api-reference/brale/get-account",
+              "api-reference/brale/get-account"
+            ]
+          },
+          {
+            "group": "Addresses",
+            "pages": [
+              "api-reference/brale/list-addresses",
+              "api-reference/brale/get-address",
+              "api-reference/brale/create-address",
+              "api-reference/brale/update-address",
+              "api-reference/brale/get-address-balance",
+              "api-reference/brale/update-address-link-token"
+            ]
+          },
+          {
+            "group": "Transfers",
+            "pages": [
               "api-reference/brale/list-transfers",
               "api-reference/brale/create-transfer",
-              "api-reference/brale/get-transfer",
-              "api-reference/brale/list-addresses",
-              "api-reference/brale/create-address",
-              "api-reference/brale/get-address-balance",
+              "api-reference/brale/get-transfer"
+            ]
+          },
+          {
+            "group": "Automations",
+            "pages": [
               "api-reference/brale/list-automations",
               "api-reference/brale/create-automations",
-              "api-reference/brale/get-automations",
+              "api-reference/brale/get-automations"
+            ]
+          },
+          {
+            "group": "Financial Institutions",
+            "pages": [
               "api-reference/brale/list-financial-institutions",
-              "api-reference/brale/create-financial-institution",
               "api-reference/brale/get-financial-institution",
+              "api-reference/brale/get-financial-institution-status",
+              "api-reference/brale/create-financial-institution",
               "api-reference/brale/create-plaid-link-token",
+              "api-reference/brale/register-financial-institution-account",
+              "api-reference/brale/update-financial-institution-link-token",
               "api-reference/brale/register-financial-institution-account-via-plaid-and-return-address-id"
+            ]
+          },
+          {
+            "group": "Plaid (Address-level)",
+            "pages": [
+              "api-reference/brale/create-plaid-link-token-address"
+            ]
+          },
+          {
+            "group": "Tokenization",
+            "pages": [
+              "api-reference/brale/list-mints",
+              "api-reference/brale/create-mint",
+              "api-reference/brale/get-mint",
+              "api-reference/brale/list-burns",
+              "api-reference/brale/create-burn",
+              "api-reference/brale/get-burn",
+              "api-reference/brale/list-tokenization-transfers",
+              "api-reference/brale/create-tokenization-transfer",
+              "api-reference/brale/get-tokenization-transfer"
             ]
           }
         ]

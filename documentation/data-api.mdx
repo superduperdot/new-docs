@@ -1,0 +1,347 @@
+---
+title: "Data API Reference"
+description: "Public, read-only API for stablecoin metadata, contract addresses, and prices. No authentication required."
+---
+
+# Stablecoin Data API
+
+`https://data.brale.xyz`
+
+Public API for querying stablecoin metadata and contract addresses across multiple blockchains. No authentication required. CORS enabled for browser and agent use.
+
+**Base URL**: `https://data.brale.xyz`  
+**Auth**: None  
+**Content-Type**: `application/json`  
+**Cache**: 10 minutes (`max-age=600`)  
+**Version**: 1.0.0 (released 2025-01-27)
+
+---
+
+## Supported Tokens
+
+| Symbol | Name | Networks |
+|--------|------|----------|
+| `SBC` | Stable Coin | Ethereum, Polygon, Avalanche, Arbitrum, Celo, Optimism, Base, Solana, Stellar |
+| `USDC` | USD Coin | Ethereum, Polygon, Avalanche, Arbitrum, Optimism, Base |
+| `USDGLO` | Glo Dollar | Ethereum, Polygon, Base |
+| `CFUSD` | Coinflow USD | Base, Polygon |
+
+Symbols are **case-insensitive** — `sbc`, `SBC`, and `Sbc` all work.
+
+---
+
+## Endpoints
+
+### GET /list
+
+List all available tokens with links to their price and data endpoints.
+
+```bash
+curl https://data.brale.xyz/list
+```
+
+```json title="Response"
+{
+  "tokens": [
+    {
+      "name": "Brale SBC Token List",
+      "urls": {
+        "price": "https://data.brale.xyz/price/sbc",
+        "data": "https://data.brale.xyz/data/sbc"
+      }
+    },
+    {
+      "name": "USDC List",
+      "urls": {
+        "price": "https://data.brale.xyz/price/usdc",
+        "data": "https://data.brale.xyz/data/usdc"
+      }
+    },
+    {
+      "name": " USDGLO Token List",
+      "urls": {
+        "price": "https://data.brale.xyz/price/usdglo",
+        "data": "https://data.brale.xyz/data/usdglo"
+      }
+    },
+    {
+      "name": "Coinflow USD",
+      "urls": {
+        "price": "https://data.brale.xyz/price/cfusd",
+        "data": "https://data.brale.xyz/data/cfusd"
+      }
+    }
+  ],
+  "count": 4,
+  "last_updated": "2026-02-17T00:06:39.616Z",
+  "contribute": {
+    "message": "Want to add your stablecoin to this list?",
+    "repository": "https://github.com/Brale-xyz/commons/tree/main/Data",
+    "requirements": "Must be Brale-issued or Brale-supported",
+    "details": "https://data.brale.xyz/help#contribute"
+  }
+}
+```
+
+---
+
+### GET /price/{symbol}
+
+Get the current price for a stablecoin. Stablecoins maintain a $1.00 USD peg.
+
+**Parameters**
+
+| Name | In | Required | Description |
+|------|----|----------|-------------|
+| `symbol` | path | Yes | Token symbol: `sbc`, `usdc`, `usdglo`, `cfusd` (case-insensitive) |
+
+```bash
+curl https://data.brale.xyz/price/sbc
+```
+
+```json title="Response (200)"
+{
+  "symbol": "SBC",
+  "name": "Stable Coin",
+  "price": "1.00",
+  "currency": "USD",
+  "details": "https://data.brale.xyz/data/sbc"
+}
+```
+
+```json title="Error (404) — unknown symbol"
+{
+  "error": "No price found for ticker: FAKE123"
+}
+```
+
+---
+
+### GET /data/{symbol}
+
+Get complete token metadata including contract addresses across all supported networks.
+
+**Parameters**
+
+| Name | In | Required | Description |
+|------|----|----------|-------------|
+| `symbol` | path | Yes | Token symbol: `sbc`, `usdc`, `usdglo`, `cfusd` (case-insensitive) |
+
+```bash
+curl https://data.brale.xyz/data/sbc
+```
+
+```json title="Response (200)"
+{
+  "name": "Brale SBC Token List",
+  "logoURI": "ipfs://QmZpbjt7zuUBpL8tcGYJD3wvqjKD1pk6hp7G9VFTZPPcMd",
+  "keywords": ["Stable Coin", "SBC", "Brale"],
+  "issuer": "https://brale.xyz",
+  "operator": "https://stablecoin.xyz",
+  "tokens": [
+    {
+      "chainId": 1,
+      "address": "0xf9FB20B8E097904f0aB7d12e9DbeE88f2dcd0F16",
+      "name": "Stable Coin",
+      "symbol": "SBC",
+      "decimals": 18,
+      "logoURI": "ipfs://Qmei6RQgkLNjS2FsTgryBZ41Z9dqMrRV4WMtEgffgjwiRs"
+    },
+    {
+      "chainId": 137,
+      "address": "0xfdcC3dd6671eaB0709A4C0f3F53De9a333d80798",
+      "name": "Stable Coin",
+      "symbol": "SBC",
+      "decimals": 18,
+      "logoURI": "ipfs://Qmei6RQgkLNjS2FsTgryBZ41Z9dqMrRV4WMtEgffgjwiRs"
+    },
+    {
+      "chainId": 8453,
+      "address": "0xfdcC3dd6671eaB0709A4C0f3F53De9a333d80798",
+      "name": "Stable Coin",
+      "symbol": "SBC",
+      "decimals": 18,
+      "logoURI": "ipfs://Qmei6RQgkLNjS2FsTgryBZ41Z9dqMrRV4WMtEgffgjwiRs"
+    },
+    {
+      "chainId": 101,
+      "address": "DBAzBUXaLj1qANCseUPZz4sp9F8d2sc78C4vKjhbTGMA",
+      "name": "Stable Coin",
+      "symbol": "SBC",
+      "decimals": 18,
+      "logoURI": "ipfs://Qmei6RQgkLNjS2FsTgryBZ41Z9dqMrRV4WMtEgffgjwiRs"
+    }
+  ]
+}
+```
+
+<Note>
+Response above is truncated. SBC is deployed on 9 networks. The full response includes all deployments.
+</Note>
+
+```json title="Error (404) — unknown symbol"
+{
+  "error": "Token not found"
+}
+```
+
+**Chain ID Reference**
+
+| Chain ID | Network |
+|----------|---------|
+| `1` | Ethereum Mainnet |
+| `10` | Optimism |
+| `137` | Polygon |
+| `8453` | Base |
+| `42161` | Arbitrum One |
+| `42220` | Celo |
+| `43114` | Avalanche C-Chain |
+| `101` | Solana Mainnet |
+| `Stellar-Pubnet` | Stellar Network |
+
+---
+
+### GET /help
+
+Self-documenting endpoint with complete usage guide, supported tokens, chain ID reference, LLM usage examples, and contribution instructions.
+
+```bash
+curl https://data.brale.xyz/help
+```
+
+Returns a comprehensive JSON object. Useful for agents and LLMs to understand available capabilities.
+
+---
+
+### GET /version
+
+API version and release metadata.
+
+```bash
+curl https://data.brale.xyz/version
+```
+
+```json title="Response (200)"
+{
+  "version": "1.0.0",
+  "name": "brale-data-api",
+  "description": "Public API for Brale token data and pricing",
+  "release_date": "2025-01-27",
+  "release_notes": "Initial release - LLM-friendly stablecoin data API",
+  "features": [
+    "LLM integration support",
+    "Multi-network stablecoin data",
+    "Environment-agnostic URLs",
+    "OpenAPI 3.0 specification",
+    "ChatGPT plugin support"
+  ],
+  "supported_tokens": ["SBC", "USDGLO", "USDC"],
+  "api_documentation": {
+    "help": "http://data.brale.xyz/help",
+    "openapi": "http://data.brale.xyz/openapi.yaml",
+    "plugin_manifest": "http://data.brale.xyz/.well-known/ai-plugin.json"
+  }
+}
+```
+
+---
+
+### GET /get-started
+
+Quick-start guide with example commands and common LLM queries.
+
+```bash
+curl https://data.brale.xyz/get-started
+```
+
+---
+
+### GET /openapi.yaml
+
+Machine-readable OpenAPI 3.0 specification for this API.
+
+```bash
+curl https://data.brale.xyz/openapi.yaml
+```
+
+Can be imported into Postman, Swagger UI, or any OpenAPI-compatible tool.
+
+---
+
+### GET /.well-known/ai-plugin.json
+
+ChatGPT/LLM plugin manifest following the OpenAI plugin specification. Enables natural language queries about stablecoin data.
+
+```bash
+curl https://data.brale.xyz/.well-known/ai-plugin.json
+```
+
+```json title="Response (200)"
+{
+  "schema_version": "v1",
+  "name_for_human": "Brale Stablecoin Data API",
+  "name_for_model": "brale_stablecoin_data",
+  "description_for_human": "Access real-time prices, contract addresses, and network information for Brale-supported stablecoins...",
+  "auth": { "type": "none" },
+  "api": {
+    "type": "openapi",
+    "url": "https://data.brale.xyz/openapi.yaml",
+    "is_user_authenticated": false
+  },
+  "logo_url": "https://brale.xyz/logo.png",
+  "contact_email": "support@brale.xyz",
+  "legal_info_url": "https://brale.xyz/legal"
+}
+```
+
+---
+
+## Common Use Cases
+
+### Look up a contract address
+
+To find the SBC contract address on Base (chain ID `8453`):
+
+```bash
+curl -s https://data.brale.xyz/data/sbc | jq '.tokens[] | select(.chainId == 8453)'
+```
+
+```json
+{
+  "chainId": 8453,
+  "address": "0xfdcC3dd6671eaB0709A4C0f3F53De9a333d80798",
+  "name": "Stable Coin",
+  "symbol": "SBC",
+  "decimals": 18,
+  "logoURI": "ipfs://Qmei6RQgkLNjS2FsTgryBZ41Z9dqMrRV4WMtEgffgjwiRs"
+}
+```
+
+### List all networks for a token
+
+```bash
+curl -s https://data.brale.xyz/data/usdc | jq '[.tokens[].chainId]'
+```
+
+```json
+[1, 137, 43114, 42161, 10, 8453]
+```
+
+### Discover available tokens
+
+```bash
+curl -s https://data.brale.xyz/list | jq '.tokens[].name'
+```
+
+```
+"Brale SBC Token List"
+"USDC List"
+" USDGLO Token List"
+"Coinflow USD"
+```
+
+---
+
+## Adding Your Stablecoin
+
+Want your token listed in this API? See [Add Your Stablecoin](/documentation/add-your-stablecoin) for instructions on submitting a pull request to the [Brale Commons](https://github.com/Brale-xyz/commons/tree/main/Data) repository.

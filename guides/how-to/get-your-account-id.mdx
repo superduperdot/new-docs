@@ -1,29 +1,43 @@
+---
 title: "Get your account_id (yours or a managed client account)"
 description: "Retrieve your own Brale account_id and, if you manage client accounts, list and select managed account_ids."
 ---
 
-Use the Accounts API to fetch your own account_id and any managed client accounts under your tenant. You’ll need a bearer token from your client credentials first.
+Use the Accounts API to fetch your own `account_id` and any managed client accounts under your tenant. You need a bearer token from your client credentials first.
+
+## Prerequisites
+
+- API credentials (client_id + client_secret) from the [Brale Dashboard](https://app.brale.xyz)
 
 <Steps>
 <Step title="Authenticate and get a bearer token">
 
-Create client credentials in the Brale dashboard, then exchange them for a bearer token.
+Exchange your client credentials for a bearer token via OAuth2.
 
 ```bash
 curl --request POST \
   --url https://auth.brale.xyz/oauth2/token \
-  --header 'Authorization: Basic ${BASE_64_OF(client_id:client_secret)}' \
-  --header 'Content-Type: application/x-www-form-urlencoded' \
+  --header "Authorization: Basic $(echo -n ${BRALE_CLIENT_ID}:${BRALE_CLIENT_SECRET} | base64)" \
+  --header "Content-Type: application/x-www-form-urlencoded" \
   --data grant_type=client_credentials
 ```
 
-Response includes `access_token` and `token_type` (Bearer). Use `Authorization: Bearer ${access_token}` for subsequent calls.
+```json title="Response (200)"
+{
+  "access_token": "ory_at_...",
+  "expires_in": 3599,
+  "scope": "",
+  "token_type": "bearer"
+}
+```
+
+Use `Authorization: Bearer ${access_token}` for all subsequent calls.
 
 </Step>
 
 <Step title="List your accounts">
 
-Call `GET /accounts` with your bearer token to fetch account_ids:
+**GET** `https://api.brale.xyz/accounts`
 
 ```bash
 curl --request GET \
@@ -31,28 +45,51 @@ curl --request GET \
   --header "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
 
-Example response:
-
-```json
+```json title="Response (200)"
 {
   "accounts": [
-    "2Js1YFqlfxgNqC2KTPEjrWIwKU7",   // Your primary account_id
-    "2VcUIIsgARwVbEGlIYbhg6fGG57"    // Managed client account_id (if applicable)
+    {
+      "id": "2s55NaiUtTNSIKKGy0iajrRyHq9",
+      "name": "Brale Ecosystem",
+      "status": "complete",
+      "updated": "2026-01-26T20:31:19",
+      "created": "2025-01-24T15:29:15"
+    }
   ]
 }
 ```
+
+Each account object includes `id` (KSUID), `name`, `status`, and timestamps.
 
 </Step>
 
 <Step title="Select the right account_id for downstream calls">
 
-- Use your primary account_id for operations on your own balances and resources.
-- If you manage client accounts (managed accounts), use the client’s account_id in path parameters for downstream endpoints (e.g., transfers, addresses).
-- Do not send account_id in the request body or querystring—only in the path where required.
+- Use your primary `account_id` for operations on your own balances and resources.
+- If you manage client accounts, use the client's `account_id` in path parameters for downstream endpoints (e.g., transfers, addresses).
+- Always put `account_id` in the **URL path** — never in the request body or query string.
 
 </Step>
 </Steps>
 
 <Tip>
-If you only see one account_id returned, that’s your primary account. Managed client accounts will appear in the same list once created.
+If you only see one account returned, that's your primary account. Managed client accounts will appear in the same list once created.
 </Tip>
+
+## Verification
+
+```bash
+# Authenticate
+ACCESS_TOKEN=$(curl -s --request POST \
+  --url https://auth.brale.xyz/oauth2/token \
+  --header "Authorization: Basic $(echo -n ${BRALE_CLIENT_ID}:${BRALE_CLIENT_SECRET} | base64)" \
+  --header "Content-Type: application/x-www-form-urlencoded" \
+  --data grant_type=client_credentials | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+# List accounts — expect HTTP 200
+curl -s -w "\nHTTP: %{http_code}" \
+  --url https://api.brale.xyz/accounts \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+**Expected**: HTTP 200 with an `accounts` array containing at least one object with `id`, `name`, and `status`.

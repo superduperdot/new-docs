@@ -6,35 +6,66 @@ title: '2nd & 3rd Party Transfers'
   We've expanded the Transfers endpoint to support both 2nd and 3rd party ACH transfers.
 </p>
 
-When Brale initiates a transfer on behalf of your business or your customer's business, 2nd/3rd-party branding ensures the **receiver sees the intended business name** on the ACH transaction (instead of “Brale”).
+<Warning>
+**ACH branding requires mainnet.** The 2nd/3rd party branding feature uses ACH rails which cannot be tested on testnet. The API shape (the `brand` field in transfer requests) can be validated, but actual branded ACH transactions require mainnet credentials and real bank accounts.
+</Warning>
+
+When Brale initiates a transfer on behalf of your business or your customer's business, 2nd/3rd-party branding ensures the **receiver sees the intended business name** on the ACH transaction (instead of "Brale").
 
 To learn more and see a demo, schedule a meeting to [talk to sales](https://brale.xyz/contact).
 
+## Prerequisites
+
+- Bearer token ([How to authenticate](/key-concepts/authentication))
+- Your `account_id` and any managed client `account_id`s
+- An ACH-linked address for the source (Plaid or manual)
+- An internal custodial `address_id` for the destination
+
 ## Creating 2nd/3rd Party Transfers
 
-**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+**POST** `https://api.brale.xyz/accounts/{account_id}/transfers`
 
-Use the `brand` object to control the business name displayed to the receiver. Pass the target account inside the request body under `brand.account_id`. The `brand.account_id` is the **Account whose name should appear** to the receiver.
+Use the `brand` object to control the business name displayed to the receiver. Pass the target account inside the request body under `brand.account_id`.
 
-- `account_id: aB3hJkL9mN2PqRsTuvWxyz1234` = `Company Alpha`
-  - Your business (Brale's direct customer)
-- `account_id: 34fcsGrCgN0Z9zC1v55eP0I6AKW` = `Company Beta`
-  - Your customer
+- **2nd-party**: `brand.account_id` = your own account. Display name = your business.
+- **3rd-party**: `brand.account_id` = your customer's account. Display name = your customer's business.
 
 If you omit `brand`, the transfer uses your default branding.
 
-> **Definitions**
->
-> - **2nd-party**: You are the brand (display name = your business).
-> - **3rd-party**: Your customer's business is the brand (display name = your customer).
+<Note>
+The `brand` field is only supported on ACH transfers (`ach_credit` and `ach_debit`). It is not supported for `wire` or `rtp_credit`.
+</Note>
 
-### Example of a 2nd Party Transfer (brand = your business)
+### Example: 2nd Party Transfer (brand = your business)
 
-**POST** `https://api.brale.xyz/accounts/account_id/transfers`
+```bash
+curl --request POST \
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/transfers" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header "Content-Type: application/json" \
+  --header "Idempotency-Key: $(uuidgen)" \
+  --data '{
+    "amount": {
+      "value": "100",
+      "currency": "USD"
+    },
+    "source": {
+      "value_type": "USD",
+      "transfer_type": "ach_debit",
+      "address_id": "'${ACH_SOURCE_ADDRESS_ID}'"
+    },
+    "destination": {
+      "value_type": "SBC",
+      "transfer_type": "canton",
+      "address_id": "'${INTERNAL_ADDRESS_ID}'"
+    },
+    "brand": {
+      "account_id": "'${YOUR_ACCOUNT_ID}'"
+    }
+  }'
+```
 
-`brand.account_id` = `aB3hJkL9mN2PqRsTuvWxyz1234` (Company Alpha)
-
-The receiver will see **Company Alpha** as the name on the ACH transaction.
+### Example: 3rd Party Transfer (brand = your customer)
 
 ```json title="Request"
 {
@@ -44,58 +75,31 @@ The receiver will see **Company Alpha** as the name on the ACH transaction.
   },
   "source": {
     "value_type": "USD",
-    "transfer_type": "ach-debit",
-    "address_id": "34R7rk6hBuBl8Dmytqyz3iSSSQd"
+    "transfer_type": "ach_debit",
+    "address_id": "${ACH_SOURCE_ADDRESS_ID}"
   },
   "destination": {
     "value_type": "SBC",
-    "transfer_type": "Canton",
-    "address_id": "34R8PiuPLgHlXbWci7JlSmLapQY"
+    "transfer_type": "canton",
+    "address_id": "${INTERNAL_ADDRESS_ID}"
   },
   "brand": {
-    "account_id": "aB3hJkL9mN2PqRsTuvWxyz1234"
+    "account_id": "${CUSTOMER_ACCOUNT_ID}"
   }
 }
 ```
 
-```json title="Response"
-{
-  "id": "9f80c1f5-80df-4c5e-9b68-b9f5712d46d4"
-}
-```
+## Verification
 
-### Example of a 3rd Party Transfer (brand = your customer)
+| Step | Testnet? | Notes |
+|------|----------|-------|
+| Validate `brand` field accepted in request | **No (mainnet only)** | ACH rails required |
+| List accounts (verify managed accounts) | Yes | Can verify account_ids exist |
+| List addresses (verify ACH addresses) | Yes | Can verify address types |
 
-**POST** `https://api.brale.xyz/accounts/account_id/transfers`
-
-`brand.account_id` = `34fcsGrCgN0Z9zC1v55eP0I6AKW` (Company Beta)
-
-The receiver will see Company Beta as the originator name on the ACH transaction.
-
-```json title="Request"
-{
-  "amount": {
-    "value": "100",
-    "currency": "USD"
-  },
-  "source": {
-    "value_type": "USD",
-    "transfer_type": "ach-debit",
-    "address_id": "34R7rk6hBuBl8Dmytqyz3iSSSQd"
-  },
-  "destination": {
-    "value_type": "SBC",
-    "transfer_type": "Canton",
-    "address_id": "34fczKxoKRUMuZeWyMj9hhqVjuJ"
-  },
-  "brand": {
-    "account_id": "34fcsGrCgN0Z9zC1v55eP0I6AKW"
-  }
-}
-```
-
-```json title="Response"
-{
-  "id": "9f80c1f5-80df-4c5e-9b68-b9f5712d46d4"
-}
+```bash
+# Testnet: List accounts to verify brand target exists — expect HTTP 200
+curl -s -w "\nHTTP: %{http_code}" \
+  "https://api.brale.xyz/accounts" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
 ```

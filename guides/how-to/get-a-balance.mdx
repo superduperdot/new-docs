@@ -6,57 +6,63 @@ description: "Query the stablecoin balance of an internal (custodial) address."
 <Steps>
 <Step title="Prerequisites">
 - Get your `account_id`: [How to get your account_id](/guides/how-to/get-your-account-id)
-- Get a custodial `address_id`: list addresses and choose one with `type=internal`:
-
-```bash
-curl --request GET \
-  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/addresses" \
-  --header "Authorization: Bearer ${AUTH_TOKEN}"
-```
+- Get a custodial `address_id`: [How to get address_ids](/guides/how-to/get-your-address-ids) — choose one with `type: "internal"`
+- A bearer token ([How to authenticate](/key-concepts/authentication))
 </Step>
 
 <Step title="Call the balance endpoint">
-Use your `account_id` and an internal `address_id`. Balances require both `transfer_type` and `value_type`.
+Balances require both `transfer_type` and `value_type` as query parameters.
 
-`GET /accounts/{account_id}/addresses/{address_id}/balance`
+**GET** `https://api.brale.xyz/accounts/{account_id}/addresses/{address_id}/balance`
 
-| Parameter        | Description                         | Example                  |
-| ---------------- | ----------------------------------- | ------------------------ |
-| `transfer_type`  | Blockchain network                  | `solana`, `base`, `ethereum` |
-| `value_type`     | Token symbol (case-sensitive)       | `SBC`, `USDC`, `PYUSD`   |
+| Parameter | Description | Example |
+| -------------- | ----------------------------------- | ----------------------------- |
+| `transfer_type` | Blockchain network | `solana`, `base`, `ethereum` |
+| `value_type` | Token symbol (UPPERCASE) | `SBC`, `USDC`, `PYUSD` |
 
 ```bash
 curl --request GET \
-  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/addresses/${ADDRESS_ID}/balance?transfer_type=base&value_type=SBC" \
-  --header "Authorization: Bearer ${AUTH_TOKEN}"
+  --url "https://api.brale.xyz/accounts/${ACCOUNT_ID}/addresses/${ADDRESS_ID}/balance?transfer_type=solana&value_type=SBC" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
 </Step>
 
 <Step title="Review the response">
 
-```json
+```json title="Response (200)"
 {
   "address": {
-    "id": "2VcUIonJeVQzFoBuC7LdFT0dRe4",
-    "address": "0xcdEA458750b9A8D6C4Ba8B3D68CE98Ba2330352A"
+    "id": "2s55QPf0rp1sSxJToQZxFVhMRy7",
+    "address": "8ft5hMGTcAcLo25d4Lg5DN9hrYxHHrrTikwQTaQbmMrU"
   },
   "balance": {
-    "value": "45314.07",
+    "value": "119.00",
     "currency": "USD"
   },
-  "value_type": "SBC",
-  "transfer_type": "base"
+  "transfer_type": "solana",
+  "value_type": "SBC"
 }
 ```
 </Step>
 </Steps>
 
-::::note
-Balances are only available for `type=internal` custodial addresses managed by Brale.
-::::
+<Note>
+Balances are only available for `type: "internal"` custodial addresses managed by Brale.
+</Note>
 
 ## Notes
-- Works only for internal custodial addresses (`type=internal`).
-- Always send both `transfer_type` and `value_type`; a custodial address can hold multiple tokens across chains.
+- Works only for internal custodial addresses (`type: "internal"`).
+- Always send both `transfer_type` and `value_type` — a custodial address can hold multiple tokens across chains.
+- `value_type` is UPPERCASE (`SBC`, `USDC`, `PYUSD`). `transfer_type` is lowercase (`solana`, `base`, `ethereum`).
 - See [Value Types](/coverage/value-types) and [Transfer Types](/coverage/transfer-types) for supported combinations.
 
+## Verification
+
+```bash
+# Get balance — expect HTTP 200
+curl -s -w "\nHTTP: %{http_code}" \
+  "https://api.brale.xyz/accounts/${ACCOUNT_ID}/addresses/${ADDRESS_ID}/balance?transfer_type=solana&value_type=SBC" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+**Expected**: HTTP 200 with `balance.value` (string), `balance.currency`, `transfer_type`, and `value_type`.

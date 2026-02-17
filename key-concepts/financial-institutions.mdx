@@ -7,9 +7,9 @@ title: 'Financial Institutions'
   used to withdraw or receive funds.
 </p>
 
-:::warning[Legacy / Deprecated]
+<Warning title="Legacy / Deprecated">
 The Financial Institutions resource is superseded by Addresses. New integrations should create offchain accounts (ACH, wire, RTP) as Addresses and pass their `address_id` to Transfers. Plaid endpoints are now under `/plaid/*`. Existing FI integrations continue to work during a deprecation window.
-:::
+</Warning>
 
 You can add external accounts through:
 
@@ -45,9 +45,9 @@ Link your customer's bank account by adding it to their Account.
 }
 ```
 
-:::note
+<Note>
 You can also add Financial Institutions through the Brale Dashboard settings page at https://app.brale.xyz/settings.
-:::
+</Note>
 
 ## Fetching Financial Institutions
 
@@ -154,24 +154,39 @@ Shortly after exchanging the public token, the user's bank accounts are idempote
 
 ```json title="Response"
 {
-  "name": "Business Checking Account",
-  "transfer_type": ["ACH", "Wire"],
-  "bank_details": {
-    "owner": "Jane Doe",
-    "account_number": "1234567890",
-    "routing_number": "987654321",
-    "name": "Example Bank",
-    "address": {
-      "street_line_1": "100 Example St",
-      "street_line_2": "Suite 500",
-      "city": "Springfield",
-      "state": "CA",
-      "zip": "90001",
-      "country": "US"
-    },
-    "account_type": "checking"
-  }
+  "id": "33YzcN5bcXa7r8yl5JcqxwXMsxN",
+  "name": "THE BANK OF TAMPA",
+  "owner": "Jane Doe",
+  "status": "active",
+  "bank_address": {
+    "state": "CA",
+    "zip": "90001",
+    "city": "Springfield",
+    "country": "US",
+    "street_line_1": "100 Example St",
+    "street_line_2": "Suite 500"
+  },
+  "beneficiary_address": {
+    "state": "CA",
+    "zip": "90001",
+    "city": "Springfield",
+    "country": "US",
+    "street_line_1": "100 Example St",
+    "street_line_2": "Suite 500"
+  },
+  "transfer_types": null,
+  "created": "2025-10-03T16:27:51.515326Z",
+  "account_number": "****7890",
+  "needs_update": false,
+  "account_type": "checking",
+  "last_updated": "2025-10-03T16:27:52.824460Z",
+  "routingNumber": "063108680"
 }
+```
+
+<Note>
+**Known runtime behavior**: `routingNumber` uses camelCase, which is inconsistent with the snake_case convention used by all other fields. `transfer_types` may be `null` on Financial Institutions created via Plaid. The `account_number` is masked in responses (`****7890`).
+</Note>
 ```
 
 At this point, you can initiate ACH pulls or other transactions using these new Financial Institutions.

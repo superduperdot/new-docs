@@ -14,9 +14,9 @@ The `account_id` is used in the request URL across many Brale API endpoints to s
 
 To KYB and approve an account, we collect key details such as business name and EIN. For more information, see our Compliance Requirements. If additional details are required, we will notify you with the necessary steps to complete KYB.
 
-:::note
+<Note>
 Customers can also self onboard at https://app.brale.xyz/signup.
-:::
+</Note>
 
 ## Creating an account
 
@@ -134,8 +134,7 @@ Brale will review the Account and return a `status` field denoting the customer'
 
 All resources in the Brale API (Addresses, Financial Institutions, Transfers, Automations, etc.) are scoped to specific accounts. Supply the ID in the path, never in the body.
 
-:::info[Path Rule]
-
+<Info title="Path Rule">
 Every endpoint that contains `{account_id}` must be called by including the account ID in the path.
 E.g. `GET` `https://api.brale.xyz/accounts/2Js1YFqlfxgNqC2KTPEjrWIwKU7/addresses`. Do not send the account ID in the body or query string.
-:::
+</Info>
