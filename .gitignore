@@ -1,0 +1,21 @@
+# Testing and verification
+scripts/
+artifacts/
+docs/
+screenshots/
+
+# Node
+node_modules/
+
+# IDE
+.cursor/
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Review artifacts
+*.report.json
+documentation-review-report.json

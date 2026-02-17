@@ -37,9 +37,6 @@ Brale is infrastructure for stablecoin issuance and movement. The API lets you:
 ├── overview/            # Quick start, sandbox/testnet setup
 ├── coverage/            # Supported transfer_types, value_types, and chains
 ├── documentation/       # Platform overview, API design, Data API reference
-├── scripts/             # Verification scripts (testnet, mainnet-light, static checks)
-├── docs/                # Internal: verification ledger, coverage report, test plans
-├── artifacts/           # OpenAPI snapshots and test run output
 └── docs.json            # Mintlify site configuration and navigation
 ```
 
@@ -63,18 +60,6 @@ Anyone contributing to these docs should know:
 - **Idempotency**: All `POST` and `PATCH` requests require an `Idempotency-Key` header.
 - **IDs**: All resource IDs are KSUIDs (26-character, alphanumeric, time-sortable).
 
-## Verification
-
-This repo includes scripts that validate documentation against the live APIs. No guessing — every claim is tested.
-
-| Script | What it does | Requires |
-|--------|-------------|----------|
-| `scripts/docs-verify.sh` | Static checks: semantic contract, JSON validity, link integrity, guide completeness | Nothing |
-| `scripts/guides-verify-testnet.sh` | Hits testnet endpoints, captures real responses, checks guide accuracy | `BRALE_CLIENT_ID`, `BRALE_CLIENT_SECRET` (testnet) |
-| `scripts/verify-mainnet-light.sh` | Read-only mainnet checks (GET only, no value movement) | `BRALE_ENV=mainnet`, `MAINNET_CONFIRM=true`, mainnet credentials |
-
-Results go to `artifacts/` and are summarized in `docs/_verification.md`.
-
 ## Deploying
 
 Pushes to `main` auto-deploy to the live Mintlify site via the [Mintlify GitHub app](https://dashboard.mintlify.com). No build step, no CI — merge and it's live.
@@ -83,10 +68,10 @@ Pushes to `main` auto-deploy to the live Mintlify site via the [Mintlify GitHub 
 
 1. Create a branch off `main`
 2. Make your changes
-3. Run `bash scripts/docs-verify.sh` to catch regressions
-4. Open a PR — the review checklist is in `docs/_checklist.md`
+3. Preview locally with `mintlify dev` (requires Node.js v22)
+4. Open a PR
 
-If you're documenting new API behavior, run the testnet verification script to capture real responses. Do not invent example payloads.
+If you're documenting new API behavior, test against the live API first. Do not invent example payloads.
 
 ## Support
 
